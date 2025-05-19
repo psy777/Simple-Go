@@ -70,12 +70,27 @@ main {
     align-items: flex-start; /* Align items to the top */
 }
 
+#board-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center board and nav info */
+    flex-grow: 1;
+}
+
 #board-container {
-    flex-grow: 1; /* Allow board to take available space */
+    /* flex-grow: 1; Allow board to take available space */ /* No longer needed as board-area handles flex grow */
     display: flex;
     justify-content: center;
     align-items: center;
     min-width: 300px; /* Minimum width for the board */
+    margin-bottom: 10px; /* Space between board and nav info */
+}
+
+#move-navigation-info {
+    font-size: 0.9em;
+    color: #555;
+    min-height: 1.2em; /* Reserve space */
+    text-align: center;
 }
 
 #go-board-canvas {
@@ -151,28 +166,98 @@ main {
     color: #d9534f; /* Red for errors/warnings, can be changed dynamically */
     font-style: italic;
     font-size: 0.9em;
-    min-height: 1.2em; /* Reserve space for one line */
-}
-
-#current-turn-indicator {
-    font-weight: bold;
-    text-align: center;
+    min-height: 2.4em; /* Reserve space for two lines if needed for error messages */
+    text-align: center; /* Center error messages */
     margin-top: 10px;
-    font-size: 1em;
 }
 
-#current-player-turn {
-    /* Style will be set by JS */
+/* Modal Styles */
+.modal {
+    /* display: none; /* Hidden by default, JS will toggle */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* Dim background */
+    display: flex; /* Use flexbox to center modal content */
+    justify-content: center;
+    align-items: center;
 }
 
-footer {
+.modal-content {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 450px;
+    position: relative;
+}
+
+.close-modal-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.close-modal-btn:hover,
+.close-modal-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
     text-align: center;
-    margin-top: 25px;
-    padding-top: 15px;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.9em;
-    color: #666;
 }
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select {
+    width: calc(100% - 22px); /* Account for padding and border */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.modal-content button {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    width: 100%;
+    transition: background-color 0.2s ease;
+}
+
+.modal-content button:hover {
+    background-color: #0056b3;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

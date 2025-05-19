@@ -1,35 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('go-board-canvas');
     const ctx = canvas.getContext('2d');
-    const boardSizeSelect = document.getElementById('board-size-select');
-    const newGameBtn = document.getElementById('new-game-btn');
+    
+    // Main Controls
+    const newGameModalBtn = document.getElementById('new-game-modal-btn');
     const loadSgfBtn = document.getElementById('load-sgf-btn');
     const sgfFileInput = document.getElementById('sgf-file-input');
     const saveSgfBtn = document.getElementById('save-sgf-btn');
-    // Player Info Elements
-    const blackPlayerNameSpan = document.querySelector('#player-info-black .player-name');
-    const blackPlayerRankSpan = document.querySelector('#player-info-black .player-rank');
-    const blackCapturesSpan = document.getElementById('black-captures');
-    const whitePlayerNameSpan = document.querySelector('#player-info-white .player-name');
-    const whitePlayerRankSpan = document.querySelector('#player-info-white .player-rank');
-    const whiteCapturesSpan = document.getElementById('white-captures');
-    const currentPlayerTurnSpan = document.getElementById('current-player-turn');
-    const statusMessageP = document.getElementById('status-message');
 
-    // Placeholder for player names and ranks (can be loaded from SGF or set by user later)
+    // Game Info Display
+    const blackPlayerNameDisplay = document.querySelector('#player-info-black .player-name');
+    const blackCapturesSpan = document.getElementById('black-captures');
+    const whitePlayerNameDisplay = document.querySelector('#player-info-white .player-name');
+    const whiteCapturesSpan = document.getElementById('white-captures');
+    const statusMessageP = document.getElementById('status-message');
+    const moveNavigationInfoDiv = document.getElementById('move-navigation-info');
+
+    // New Game Modal Elements
+    const newGameModal = document.getElementById('new-game-modal');
+    const closeModalBtn = document.querySelector('.close-modal-btn');
+    const startGameBtn = document.getElementById('start-game-btn');
+    const modalBoardSizeSelect = document.getElementById('modal-board-size-select');
+    const modalBlackNameInput = document.getElementById('modal-black-name');
+    const modalBlackRankInput = document.getElementById('modal-black-rank');
+    const modalWhiteNameInput = document.getElementById('modal-white-name');
+    const modalWhiteRankInput = document.getElementById('modal-white-rank');
+    const modalKomiInput = document.getElementById('modal-komi');
+
+    // Game State Variables
+    let boardSize = parseInt(modalBoardSizeSelect.value); // Default from modal
     let playerNames = { black: "Black", white: "White" };
     let playerRanks = { black: "??", white: "??" };
-
-
-    let boardSize = parseInt(boardSizeSelect.value);
+    let komi = 6.5;
     let squareSize;
-    let board = []; // 2D array representing the board state: 0 for empty, 1 for black, 2 for white
-    let currentPlayer = 1; // 1 for Black, 2 for White
+    let board = []; 
+    let currentPlayer = 1; 
     let blackCaptures = 0;
     let whiteCaptures = 0;
-    let boardHistory = []; // For Superko rule
-    let gameMoves = []; // To store moves for SGF: [{player, r, c}, ...]
-    let currentMoveIndex = -1; // -1 means at the start, before any moves are shown/made from gameMoves
+    let boardHistory = []; 
+    let gameMoves = []; 
+    let currentMoveIndex = -1; 
 
     const STONE_COLOR = {
         BLACK: '#111',
@@ -40,8 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const BOARD_LINE_COLOR = '#503720'; // Darker brown for lines
     const BOARD_BG_COLOR = '#e4b268'; // Traditional Go board color from CSS
 
-    function initGame() {
-        boardSize = parseInt(boardSizeSelect.value);
+    function initGame(isModalStart = false) {
+        if (isModalStart) {
+            boardSize = parseInt(modalBoardSizeSelect.value);
+            playerNames.black = modalBlackNameInput.value || "Black";
+            playerRanks.black = modalBlackRankInput.value || "??";
+            playerNames.white = modalWhiteNameInput.value || "White";
+            playerRanks.white = modalWhiteRankInput.value || "??";
+            komi = parseFloat(modalKomiInput.value) || 6.5;
+        }
+        // If not modal start, it might be SGF load or initial page load
+        // For initial page load, values from modal selectors are used by default for boardSize
+
         board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
         currentPlayer = 1;
         blackCaptures = 0;
@@ -49,10 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
         boardHistory = [];
         gameMoves = [];
         currentMoveIndex = -1;
+        
+        statusMessageP.textContent = ''; // Clear previous error messages
+        moveNavigationInfoDiv.textContent = 'New game started.';
+        
         updateGameInfo();
-        resizeCanvas();
-        drawBoard();
-        statusMessageP.textContent = 'New game started.';
+        resizeCanvas(); // This will call drawBoard
+        // drawBoard(); // Called by resizeCanvas
     }
 
     function resizeCanvas() {
@@ -152,51 +175,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updateGameInfo() {
-        // Update player names and ranks (currently static, could be dynamic)
-        blackPlayerNameSpan.textContent = `${playerNames.black} `;
-        const blackRankElement = document.createElement('span');
-        blackRankElement.className = 'player-rank';
-        blackRankElement.textContent = `(${playerRanks.black})`;
-        blackPlayerNameSpan.appendChild(blackRankElement);
-
-
-        whitePlayerNameSpan.textContent = `${playerNames.white} `;
-        const whiteRankElement = document.createElement('span');
-        whiteRankElement.className = 'player-rank';
-        whiteRankElement.textContent = `(${playerRanks.white})`;
-        whitePlayerNameSpan.appendChild(whiteRankElement);
-
-        // Update captures
+        blackPlayerNameDisplay.innerHTML = `${playerNames.black} <span class="player-rank">(${playerRanks.black})</span>`;
+        whitePlayerNameDisplay.innerHTML = `${playerNames.white} <span class="player-rank">(${playerRanks.white})</span>`;
+        
         blackCapturesSpan.textContent = blackCaptures;
         whiteCapturesSpan.textContent = whiteCaptures;
 
-        // Update current turn indicator
-        const turnPlayerName = currentPlayer === 1 ? playerNames.black : playerNames.white;
-        currentPlayerTurnSpan.textContent = turnPlayerName;
-        currentPlayerTurnSpan.style.color = currentPlayer === 1 ? STONE_COLOR.BLACK : STONE_COLOR.WHITE;
-        currentPlayerTurnSpan.style.fontWeight = 'bold';
-        if (currentPlayer === 2) { // White player
-            currentPlayerTurnSpan.style.backgroundColor = STONE_COLOR.BLACK; // Dark background for light text
-            currentPlayerTurnSpan.style.padding = '2px 4px';
-            currentPlayerTurnSpan.style.borderRadius = '3px';
-        } else { // Black player
-            currentPlayerTurnSpan.style.backgroundColor = 'transparent';
-            currentPlayerTurnSpan.style.padding = '0';
+        // Highlight active player
+        const blackInfoBox = document.getElementById('player-info-black');
+        const whiteInfoBox = document.getElementById('player-info-white');
+
+        if (currentPlayer === 1) {
+            blackInfoBox.style.border = '2px solid #007bff';
+            blackInfoBox.style.padding = '13px'; // Adjust padding to maintain size with border
+            whiteInfoBox.style.border = '1px solid #e0e0e0';
+            whiteInfoBox.style.padding = '14px';
+        } else {
+            whiteInfoBox.style.border = '2px solid #007bff';
+            whiteInfoBox.style.padding = '13px';
+            blackInfoBox.style.border = '1px solid #e0e0e0';
+            blackInfoBox.style.padding = '14px';
         }
-
-        // Highlight active player (optional, could add a class to player-info div)
-        document.getElementById('player-info-black').style.border = currentPlayer === 1 ? '2px solid #007bff' : '1px solid #e0e0e0';
-        document.getElementById('player-info-white').style.border = currentPlayer === 2 ? '2px solid #007bff' : '1px solid #e0e0e0';
-        document.getElementById('player-info-black').style.padding = currentPlayer === 1 ? '13px' : '14px'; // Keep padding consistent
-        document.getElementById('player-info-white').style.padding = currentPlayer === 2 ? '13px' : '14px';
-
-
     }
 
-    // Event Listeners
-    newGameBtn.addEventListener('click', initGame);
-    boardSizeSelect.addEventListener('change', initGame);
-    
+    // Modal Event Listeners
+    newGameModalBtn.addEventListener('click', () => {
+        newGameModal.style.display = 'flex';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        newGameModal.style.display = 'none';
+    });
+
+    startGameBtn.addEventListener('click', () => {
+        initGame(true); // Pass true to indicate it's a modal start
+        newGameModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => { // Close modal if clicked outside
+        if (event.target === newGameModal) {
+            newGameModal.style.display = 'none';
+        }
+    });
+
+    // Other Event Listeners
     loadSgfBtn.addEventListener('click', () => sgfFileInput.click());
     sgfFileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
@@ -207,13 +229,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     const sgfData = parseSgfContent(e.target.result);
                     if (sgfData) {
                         loadGameFromSgf(sgfData);
-                        statusMessageP.textContent = `SGF file "${file.name}" loaded.`;
+                        // statusMessageP.textContent = `SGF file "${file.name}" loaded.`; // Moved to loadGameFromSgf
                     } else {
-                        statusMessageP.textContent = `Error parsing SGF file: ${file.name}.`;
+                        statusMessageP.textContent = `Error parsing SGF file: ${file.name}.`; // This is an error, so keep
+                        moveNavigationInfoDiv.textContent = '';
                     }
                 } catch (error) {
                     console.error("Error processing SGF:", error);
-                    statusMessageP.textContent = `Error processing SGF: ${error.message}`;
+                    statusMessageP.textContent = `Error processing SGF: ${error.message}`; // This is an error
+                    moveNavigationInfoDiv.textContent = '';
                 }
             };
             reader.readAsText(file);
@@ -223,30 +247,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function parseSgfContent(sgfString) {
         const data = {
-            size: 19, // Default
-            komi: 6.5, // Default
+            size: 19, 
+            komi: 6.5, 
             moves: [],
-            rules: "Japanese" // Default, can be extracted if present (e.g. RU[Japanese])
+            rules: "Japanese",
+            blackName: "Black",
+            whiteName: "White",
+            blackRank: "??",
+            whiteRank: "??"
         };
 
         // Extract properties like SZ, KM, PB, PW, BR, WR
         const sizeMatch = sgfString.match(/SZ\[(\d+)\]/);
-        if (sizeMatch) data.size = parseInt(sizeMatch[1]);
+        if (sizeMatch) data.size = parseInt(sizeMatch[1]); else console.log("SGF: SZ not found, using default.");
 
         const komiMatch = sgfString.match(/KM\[([\d\.]+)\]/);
-        if (komiMatch) data.komi = parseFloat(komiMatch[1]);
+        if (komiMatch) data.komi = parseFloat(komiMatch[1]); else console.log("SGF: KM not found, using default.");
 
-        const blackNameMatch = sgfString.match(/PB\[([^\]]+)\]/);
-        if (blackNameMatch) data.blackName = blackNameMatch[1];
+        const blackNameMatch = sgfString.match(/PB\[([^\]]*)\]/); // Allow empty name
+        if (blackNameMatch) data.blackName = blackNameMatch[1] || "Black"; else console.log("SGF: PB not found, using default.");
 
-        const whiteNameMatch = sgfString.match(/PW\[([^\]]+)\]/);
-        if (whiteNameMatch) data.whiteName = whiteNameMatch[1];
+        const whiteNameMatch = sgfString.match(/PW\[([^\]]*)\]/); // Allow empty name
+        if (whiteNameMatch) data.whiteName = whiteNameMatch[1] || "White"; else console.log("SGF: PW not found, using default.");
         
-        const blackRankMatch = sgfString.match(/BR\[([^\]]+)\]/);
-        if (blackRankMatch) data.blackRank = blackRankMatch[1];
+        const blackRankMatch = sgfString.match(/BR\[([^\]]*)\]/); // Allow empty rank
+        if (blackRankMatch) data.blackRank = blackRankMatch[1] || "??"; else console.log("SGF: BR not found, using default.");
 
-        const whiteRankMatch = sgfString.match(/WR\[([^\]]+)\]/);
-        if (whiteRankMatch) data.whiteRank = whiteRankMatch[1];
+        const whiteRankMatch = sgfString.match(/WR\[([^\]]*)\]/); // Allow empty rank
+        if (whiteRankMatch) data.whiteRank = whiteRankMatch[1] || "??"; else console.log("SGF: WR not found, using default.");
         
         // Extract moves: sequence of ;B[xy] or ;W[xy]
         // This is a simplified parser, assumes one main variation.
@@ -269,29 +297,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadGameFromSgf(sgfData) {
-        boardSizeSelect.value = sgfData.size.toString(); // Update dropdown
-        initGame(); // Resets board, player, history, captures, gameMoves
+        // Set modal values from SGF to reflect loaded game if user opens modal again
+        modalBoardSizeSelect.value = sgfData.size.toString();
+        modalBlackNameInput.value = sgfData.blackName;
+        modalBlackRankInput.value = sgfData.blackRank;
+        modalWhiteNameInput.value = sgfData.whiteName;
+        modalWhiteRankInput.value = sgfData.whiteRank;
+        modalKomiInput.value = sgfData.komi;
 
-        // Update player names and ranks from SGF if available
-        if (sgfData.blackName) playerNames.black = sgfData.blackName;
-        if (sgfData.whiteName) playerNames.white = sgfData.whiteName;
-        if (sgfData.blackRank) playerRanks.black = sgfData.blackRank;
-        if (sgfData.whiteRank) playerRanks.white = sgfData.whiteRank;
+        // Initialize game with SGF data (but not as a modal start)
+        boardSize = sgfData.size;
+        playerNames.black = sgfData.blackName;
+        playerNames.white = sgfData.whiteName;
+        playerRanks.black = sgfData.blackRank;
+        playerRanks.white = sgfData.whiteRank;
+        komi = sgfData.komi;
         
+        initGame(false); // false: not a modal start, uses already set global vars
+
         // Store all moves from SGF into gameMoves
         gameMoves = sgfData.moves.map(m => ({ ...m })); // Make a copy
         
         // Navigate to the last move of the SGF to display the final board state
         if (gameMoves.length > 0) {
-            navigateToMove(gameMoves.length - 1);
-            statusMessageP.textContent = `SGF loaded. Displaying move ${gameMoves.length}. Player ${currentPlayer === 1 ? 'Black' : 'White'}'s turn.`;
+            navigateToMove(gameMoves.length - 1); // This will update moveNavigationInfoDiv
         } else {
-            // SGF had no moves, just board setup (e.g. only SZ property)
-            initGame(); // Re-initialize with the SGF size
-            boardSizeSelect.value = sgfData.size.toString(); // Ensure dropdown reflects SGF size
-            resizeCanvas(); // Adjust canvas for the new size
-            drawBoard();
-            statusMessageP.textContent = `SGF loaded with size ${sgfData.size}. No moves found.`;
+            // SGF had no moves, just board setup
+            // initGame() already called, board is set up.
+            // updateGameInfo and drawBoard are also called by initGame->resizeCanvas.
+            moveNavigationInfoDiv.textContent = `SGF loaded (Size: ${sgfData.size}). No moves.`;
+            statusMessageP.textContent = '';
+        }
+        // Ensure status message is cleared if SGF load was successful without move issues
+        if (!statusMessageP.textContent.startsWith("Error")) {
+             statusMessageP.textContent = '';
         }
     }
 
@@ -354,15 +393,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentMoveIndex = moveIndex;
-        currentPlayer = tempCurrentPlayer; // Player whose turn it is *after* the navigated move
+        currentPlayer = tempCurrentPlayer; 
 
-        if (moveIndex === -1) { // Navigated to before the first move
-            currentPlayer = 1; // Black's turn
-            statusMessageP.textContent = 'At the start of the game.';
+        if (moveIndex === -1) { 
+            currentPlayer = 1; 
+            moveNavigationInfoDiv.textContent = 'At the start of the game.';
         } else {
-            statusMessageP.textContent = `Displaying move ${currentMoveIndex + 1} of ${gameMoves.length}. Player ${currentPlayer === 1 ? 'Black' : 'White'}'s turn.`;
+            moveNavigationInfoDiv.textContent = `Displaying move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
         }
-        
+        statusMessageP.textContent = ''; // Clear error messages on successful navigation
         updateGameInfo();
         drawBoard();
     }
@@ -380,18 +419,36 @@ document.addEventListener('DOMContentLoaded', () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            statusMessageP.textContent = 'SGF file saved.';
+            // statusMessageP.textContent = 'SGF file saved.'; // No general status messages
+            moveNavigationInfoDiv.textContent = 'SGF file saved.';
+            setTimeout(() => { // Clear save message after a bit
+                if (moveNavigationInfoDiv.textContent === 'SGF file saved.') {
+                    if (currentMoveIndex > -1 && gameMoves.length > 0) {
+                        moveNavigationInfoDiv.textContent = `Displaying move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
+                    } else if (gameMoves.length === 0) {
+                         moveNavigationInfoDiv.textContent = 'New game started.';
+                    } else {
+                        moveNavigationInfoDiv.textContent = '';
+                    }
+                }
+            }, 2000);
         } else {
-            statusMessageP.textContent = 'No moves to save yet.';
+            // statusMessageP.textContent = 'No moves to save yet.';
+            moveNavigationInfoDiv.textContent = 'No moves to save yet.';
+             setTimeout(() => { // Clear message
+                if (moveNavigationInfoDiv.textContent === 'No moves to save yet.') {
+                     moveNavigationInfoDiv.textContent = '';
+                }
+            }, 2000);
         }
     });
 
     function generateSgfContent() {
-        if (gameMoves.length === 0 && boardSize === 0) { // boardSize check in case initGame wasn't fully run
+        if (gameMoves.length === 0 && boardSize === 0) { 
             return null;
         }
 
-        let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[ClineGo:1.0]KM[6.5]SZ[${boardSize}]PB[${playerNames.black}]PW[${playerNames.white}]BR[${playerRanks.black}]WR[${playerRanks.white}]DT[${new Date().toISOString().slice(0,10)}]`;
+        let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[ClineGo:1.0]KM[${komi}]SZ[${boardSize}]PB[${playerNames.black}]PW[${playerNames.white}]BR[${playerRanks.black}]WR[${playerRanks.white}]DT[${new Date().toISOString().slice(0,10)}]RU[Japanese]`; // Added RU
 
         gameMoves.forEach(move => {
             const playerChar = move.player === 1 ? 'B' : 'W';
@@ -449,8 +506,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleMove(row, col) {
+        statusMessageP.textContent = ''; // Clear previous errors on new attempt
+
         if (board[row][col] !== 0) {
-            statusMessageP.textContent = 'Invalid move: Position already occupied.';
+            // This is not a rule violation, just an invalid placement.
+            // User might want feedback for this, but not in the "error" status message.
+            // For now, let's keep it silent or use moveNavigationInfoDiv briefly.
+            moveNavigationInfoDiv.textContent = 'Position already occupied.';
+            setTimeout(() => { // Clear message
+                 if (moveNavigationInfoDiv.textContent === 'Position already occupied.') {
+                    if (currentMoveIndex > -1 && gameMoves.length > 0) {
+                        moveNavigationInfoDiv.textContent = `Displaying move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
+                    } else {
+                         moveNavigationInfoDiv.textContent = 'New game started.'; // Or empty if preferred
+                    }
+                 }
+            }, 1500);
             return;
         }
 
@@ -521,13 +592,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // Switch player
-        currentPlayer = opponent; // opponent is now the next player
+        currentPlayer = opponent; 
         updateGameInfo();
         drawBoard();
-        statusMessageP.textContent = `Player ${currentPlayer === 1 ? 'Black' : 'White'}'s turn.`;
+        
+        let moveMsg = `Move ${currentMoveIndex + 1}.`;
         if (capturedStones.length > 0) {
-            statusMessageP.textContent += ` Captured ${capturedStones.length} stone(s).`;
+            moveMsg += ` Captured ${capturedStones.length} stone(s).`;
         }
+        moveNavigationInfoDiv.textContent = moveMsg;
+        // statusMessageP.textContent = ''; // Cleared at the start of handleMove
     }
 
     function getNeighbors(r, c) {
@@ -584,17 +658,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (event.key === 'ArrowRight') {
             if (currentMoveIndex < gameMoves.length - 1) {
                 navigateToMove(currentMoveIndex + 1);
-            } else if (currentMoveIndex === gameMoves.length -1) {
-                // If at the last move, pressing right again could mean "go to live play"
-                // For now, it does nothing, or we could clear selection.
-                // To re-enable live play after navigation:
-                // currentPlayer = (gameMoves[currentMoveIndex].player === 1) ? 2 : 1; // Next player after last move
-                // updateGameInfo();
-                // statusMessageP.textContent = `At end of game. Player ${currentPlayer === 1 ? 'Black' : 'White'}'s turn to play.`;
+            } else if (currentMoveIndex === gameMoves.length - 1) {
+                // At the last recorded move. Pressing right again signifies wanting to make a new move.
+                // The board is already in the state of the last move.
+                // currentPlayer is already set to whose turn it would be *after* the last move.
+                // We just need to update the UI to reflect that we are now in "live play" mode.
+                moveNavigationInfoDiv.textContent = `End of recorded game. Your turn, ${playerNames[currentPlayer === 1 ? 'black' : 'white']}.`;
+                // No actual state change needed here, just UI feedback.
+                // Clicking on the board will now append a new move.
             }
         }
-        // Add other shortcuts here, e.g., for placing stones in an edit mode
     });
 
-    initGame();
+    initGame(false); // Initial game setup on page load, not from modal
 });
