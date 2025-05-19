@@ -63,7 +63,15 @@ header {
 header h1#main-title {
     color: var(--header-text);
     margin: 0;
-    font-size: 1.8em; 
+    font-family: 'Dongle', sans-serif;
+    font-size: 3.5em; 
+    font-weight: 400; 
+    line-height: 1; 
+}
+
+#main-title .title-sgf {
+    opacity: 0.6;
+    font-weight: 400; /* Optionally make SGF part a bit lighter weight */
 }
 
 .controls {
