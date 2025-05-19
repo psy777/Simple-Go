@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const blackPlayerNameDisplay = document.querySelector('#player-info-black .player-name');
     const blackCapturesSpan = document.getElementById('black-captures');
     const whitePlayerNameDisplay = document.querySelector('#player-info-white .player-name');
-    const whiteCapturesSpan = document.getElementById('white-captures');
+    const whiteCapturesSpan = document.getElementById('white-captures');f
     const statusMessageP = document.getElementById('status-message');
     const moveNavigationInfoDiv = document.getElementById('move-navigation-info');
 
