@@ -29,9 +29,23 @@
                 <canvas id="go-board-canvas"></canvas>
             </div>
             <div id="game-info">
-                <p>Current Player: <span id="current-player">Black</span></p>
-                <p>Captures: Black - <span id="black-captures">0</span> | White - <span id="white-captures">0</span></p>
+                <div class="player-info" id="player-info-black">
+                    <h3 class="player-name">Black <span class="player-rank">(??)</span></h3>
+                    <div class="player-details">
+                        <span class="player-color-indicator black"></span>
+                        <p>Captures: <span id="black-captures">0</span></p>
+                    </div>
+                </div>
+                <hr class="player-info-divider">
+                <div class="player-info" id="player-info-white">
+                    <h3 class="player-name">White <span class="player-rank">(??)</span></h3>
+                    <div class="player-details">
+                        <span class="player-color-indicator white"></span>
+                        <p>Captures: <span id="white-captures">0</span></p>
+                    </div>
+                </div>
                 <p id="status-message"></p>
+                <p id="current-turn-indicator">Turn: <span id="current-player-turn">Black</span></p>
             </div>
         </main>
 

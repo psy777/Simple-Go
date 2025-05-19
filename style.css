@@ -90,22 +90,79 @@ main {
     padding: 15px;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
-    min-width: 200px; /* Minimum width for game info */
+    width: 250px; /* Fixed width */
+    min-height: 220px; /* Minimum height to accommodate content */
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around; /* Distribute space for a more static feel */
 }
 
-#game-info p {
-    margin: 8px 0;
-    font-size: 0.95em;
+.player-info {
+    margin-bottom: 10px;
 }
 
-#current-player {
-    font-weight: bold;
+.player-info .player-name {
+    font-size: 1.1em;
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.player-info .player-rank {
+    font-size: 0.85em;
+    color: #555;
+}
+
+.player-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.player-color-indicator {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1px solid #555;
+}
+
+.player-color-indicator.black {
+    background-color: #111;
+}
+
+.player-color-indicator.white {
+    background-color: #f0f0f0;
+}
+
+.player-info p { /* For captures text */
+    margin: 0;
+}
+
+.player-info-divider {
+    border: 0;
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 10px 0;
 }
 
 #status-message {
+    margin-top: auto; /* Pushes status message towards the bottom */
     color: #d9534f; /* Red for errors/warnings, can be changed dynamically */
     font-style: italic;
+    font-size: 0.9em;
+    min-height: 1.2em; /* Reserve space for one line */
+}
+
+#current-turn-indicator {
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 1em;
+}
+
+#current-player-turn {
+    /* Style will be set by JS */
 }
 
 footer {

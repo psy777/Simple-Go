@@ -6,10 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadSgfBtn = document.getElementById('load-sgf-btn');
     const sgfFileInput = document.getElementById('sgf-file-input');
     const saveSgfBtn = document.getElementById('save-sgf-btn');
-    const currentPlayerSpan = document.getElementById('current-player');
+    // Player Info Elements
+    const blackPlayerNameSpan = document.querySelector('#player-info-black .player-name');
+    const blackPlayerRankSpan = document.querySelector('#player-info-black .player-rank');
     const blackCapturesSpan = document.getElementById('black-captures');
+    const whitePlayerNameSpan = document.querySelector('#player-info-white .player-name');
+    const whitePlayerRankSpan = document.querySelector('#player-info-white .player-rank');
     const whiteCapturesSpan = document.getElementById('white-captures');
+    const currentPlayerTurnSpan = document.getElementById('current-player-turn');
     const statusMessageP = document.getElementById('status-message');
+
+    // Placeholder for player names and ranks (can be loaded from SGF or set by user later)
+    let playerNames = { black: "Black", white: "White" };
+    let playerRanks = { black: "??", white: "??" };
+
 
     let boardSize = parseInt(boardSizeSelect.value);
     let squareSize;
@@ -142,17 +152,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function updateGameInfo() {
-        currentPlayerSpan.textContent = currentPlayer === 1 ? 'Black' : 'White';
-        currentPlayerSpan.style.color = currentPlayer === 1 ? STONE_COLOR.BLACK : STONE_COLOR.WHITE;
-        // For white player, ensure text is readable on light background
-        if (currentPlayer === 2) {
-             currentPlayerSpan.style.backgroundColor = STONE_COLOR.BLACK; // Or a dark grey
-        } else {
-            currentPlayerSpan.style.backgroundColor = 'transparent';
-        }
+        // Update player names and ranks (currently static, could be dynamic)
+        blackPlayerNameSpan.textContent = `${playerNames.black} `;
+        const blackRankElement = document.createElement('span');
+        blackRankElement.className = 'player-rank';
+        blackRankElement.textContent = `(${playerRanks.black})`;
+        blackPlayerNameSpan.appendChild(blackRankElement);
 
+
+        whitePlayerNameSpan.textContent = `${playerNames.white} `;
+        const whiteRankElement = document.createElement('span');
+        whiteRankElement.className = 'player-rank';
+        whiteRankElement.textContent = `(${playerRanks.white})`;
+        whitePlayerNameSpan.appendChild(whiteRankElement);
+
+        // Update captures
         blackCapturesSpan.textContent = blackCaptures;
         whiteCapturesSpan.textContent = whiteCaptures;
+
+        // Update current turn indicator
+        const turnPlayerName = currentPlayer === 1 ? playerNames.black : playerNames.white;
+        currentPlayerTurnSpan.textContent = turnPlayerName;
+        currentPlayerTurnSpan.style.color = currentPlayer === 1 ? STONE_COLOR.BLACK : STONE_COLOR.WHITE;
+        currentPlayerTurnSpan.style.fontWeight = 'bold';
+        if (currentPlayer === 2) { // White player
+            currentPlayerTurnSpan.style.backgroundColor = STONE_COLOR.BLACK; // Dark background for light text
+            currentPlayerTurnSpan.style.padding = '2px 4px';
+            currentPlayerTurnSpan.style.borderRadius = '3px';
+        } else { // Black player
+            currentPlayerTurnSpan.style.backgroundColor = 'transparent';
+            currentPlayerTurnSpan.style.padding = '0';
+        }
+
+        // Highlight active player (optional, could add a class to player-info div)
+        document.getElementById('player-info-black').style.border = currentPlayer === 1 ? '2px solid #007bff' : '1px solid #e0e0e0';
+        document.getElementById('player-info-white').style.border = currentPlayer === 2 ? '2px solid #007bff' : '1px solid #e0e0e0';
+        document.getElementById('player-info-black').style.padding = currentPlayer === 1 ? '13px' : '14px'; // Keep padding consistent
+        document.getElementById('player-info-white').style.padding = currentPlayer === 2 ? '13px' : '14px';
+
+
     }
 
     // Event Listeners
@@ -191,12 +229,24 @@ document.addEventListener('DOMContentLoaded', () => {
             rules: "Japanese" // Default, can be extracted if present (e.g. RU[Japanese])
         };
 
-        // Extract properties like SZ, KM
+        // Extract properties like SZ, KM, PB, PW, BR, WR
         const sizeMatch = sgfString.match(/SZ\[(\d+)\]/);
         if (sizeMatch) data.size = parseInt(sizeMatch[1]);
 
         const komiMatch = sgfString.match(/KM\[([\d\.]+)\]/);
         if (komiMatch) data.komi = parseFloat(komiMatch[1]);
+
+        const blackNameMatch = sgfString.match(/PB\[([^\]]+)\]/);
+        if (blackNameMatch) data.blackName = blackNameMatch[1];
+
+        const whiteNameMatch = sgfString.match(/PW\[([^\]]+)\]/);
+        if (whiteNameMatch) data.whiteName = whiteNameMatch[1];
+        
+        const blackRankMatch = sgfString.match(/BR\[([^\]]+)\]/);
+        if (blackRankMatch) data.blackRank = blackRankMatch[1];
+
+        const whiteRankMatch = sgfString.match(/WR\[([^\]]+)\]/);
+        if (whiteRankMatch) data.whiteRank = whiteRankMatch[1];
         
         // Extract moves: sequence of ;B[xy] or ;W[xy]
         // This is a simplified parser, assumes one main variation.
@@ -222,8 +272,11 @@ document.addEventListener('DOMContentLoaded', () => {
         boardSizeSelect.value = sgfData.size.toString(); // Update dropdown
         initGame(); // Resets board, player, history, captures, gameMoves
 
-        // Override komi if needed (not directly used in current display but good to have)
-        // console.log("Komi from SGF:", sgfData.komi);
+        // Update player names and ranks from SGF if available
+        if (sgfData.blackName) playerNames.black = sgfData.blackName;
+        if (sgfData.whiteName) playerNames.white = sgfData.whiteName;
+        if (sgfData.blackRank) playerRanks.black = sgfData.blackRank;
+        if (sgfData.whiteRank) playerRanks.white = sgfData.whiteRank;
         
         // Store all moves from SGF into gameMoves
         gameMoves = sgfData.moves.map(m => ({ ...m })); // Make a copy
@@ -338,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
 
-        let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[ClineGo:1.0]KM[6.5]SZ[${boardSize}]PB[Black]PW[White]DT[${new Date().toISOString().slice(0,10)}]`;
+        let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[ClineGo:1.0]KM[6.5]SZ[${boardSize}]PB[${playerNames.black}]PW[${playerNames.white}]BR[${playerRanks.black}]WR[${playerRanks.white}]DT[${new Date().toISOString().slice(0,10)}]`;
 
         gameMoves.forEach(move => {
             const playerChar = move.player === 1 ? 'B' : 'W';
