@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Go Board</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wren Go</h1>
+            <div class="controls">
+                <label for="board-size-select">Board Size:</label>
+                <select id="board-size-select">
+                    <option value="9">9x9</option>
+                    <option value="13">13x13</option>
+                    <option value="19" selected>19x19</option>
+                </select>
+                <button id="new-game-btn">New Game</button>
+                <button id="load-sgf-btn">Load SGF</button>
+                <input type="file" id="sgf-file-input" accept=".sgf" style="display: none;">
+                <button id="save-sgf-btn">Save SGF</button>
+            </div>
+        </header>
+
+        <main>
+            <div id="board-container">
+                <canvas id="go-board-canvas"></canvas>
+            </div>
+            <div id="game-info">
+                <p>Current Player: <span id="current-player">Black</span></p>
+                <p>Captures: Black - <span id="black-captures">0</span> | White - <span id="white-captures">0</span></p>
+                <p id="status-message"></p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Keyboard Shortcuts: Left Arrow (Previous Move), Right Arrow (Next Move)</p>
+            <p>Superko rule: Active</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

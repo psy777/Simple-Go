@@ -1,0 +1,147 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px; /* Max width for the game interface */
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 15px;
+}
+
+header h1 {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap; /* Allow controls to wrap on smaller screens */
+}
+
+.controls label {
+    font-weight: bold;
+}
+
+.controls select,
+.controls button {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.controls button:hover {
+    background-color: #e9ecef;
+}
+
+.controls select:focus,
+.controls button:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+main {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start; /* Align items to the top */
+}
+
+#board-container {
+    flex-grow: 1; /* Allow board to take available space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 300px; /* Minimum width for the board */
+}
+
+#go-board-canvas {
+    border: 2px solid #333;
+    background-color: #e4b268; /* Traditional Go board color */
+    max-width: 100%; /* Ensure canvas is responsive */
+    height: auto; /* Maintain aspect ratio */
+}
+
+#game-info {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    min-width: 200px; /* Minimum width for game info */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#game-info p {
+    margin: 8px 0;
+    font-size: 0.95em;
+}
+
+#current-player {
+    font-weight: bold;
+}
+
+#status-message {
+    color: #d9534f; /* Red for errors/warnings, can be changed dynamically */
+    font-style: italic;
+}
+
+footer {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #board-container {
+        width: 100%; /* Full width on smaller screens */
+        margin-bottom: 20px;
+    }
+
+    #game-info {
+        width: 100%;
+        max-width: 400px; /* Max width for game info on small screens */
+    }
+
+    .controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .controls select,
+    .controls button {
+        width: 100%;
+        max-width: 250px; /* Limit width of controls */
+    }
+}
