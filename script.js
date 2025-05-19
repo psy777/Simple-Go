@@ -7,12 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadSgfBtn = document.getElementById('load-sgf-btn');
     const sgfFileInput = document.getElementById('sgf-file-input');
     const saveSgfBtn = document.getElementById('save-sgf-btn');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
     // Game Info Display
     const blackPlayerNameDisplay = document.querySelector('#player-info-black .player-name');
     const blackCapturesSpan = document.getElementById('black-captures');
     const whitePlayerNameDisplay = document.querySelector('#player-info-white .player-name');
-    const whiteCapturesSpan = document.getElementById('white-captures');f
+    const whiteCapturesSpan = document.getElementById('white-captures'); // Typo 'f' removed
     const statusMessageP = document.getElementById('status-message');
     const moveNavigationInfoDiv = document.getElementById('move-navigation-info');
 
@@ -47,8 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
         PREVIEW_BLACK: 'rgba(17, 17, 17, 0.5)',
         PREVIEW_WHITE: 'rgba(240, 240, 240, 0.5)'
     };
-    const BOARD_LINE_COLOR = '#503720'; // Darker brown for lines
-    const BOARD_BG_COLOR = '#e4b268'; // Traditional Go board color from CSS
+    let BOARD_LINE_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-line-color').trim() || '#503720';
+    let BOARD_BG_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-bg-color').trim() || '#e4b268';
+
+
+    function updateThemeColorsFromCSS() {
+        BOARD_LINE_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-line-color').trim();
+        BOARD_BG_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-bg-color').trim();
+        // Update stone colors if they are also CSS variables (currently they are hardcoded in JS)
+        // For example:
+        // STONE_COLOR.BLACK = getComputedStyle(document.documentElement).getPropertyValue('--stone-black-color').trim();
+        // STONE_COLOR.WHITE = getComputedStyle(document.documentElement).getPropertyValue('--stone-white-color').trim();
+    }
+
 
     function initGame(isModalStart = false) {
         if (isModalStart) {
@@ -80,12 +92,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resizeCanvas() {
         const boardContainer = document.getElementById('board-container');
-        // Ensure container has a width, fallback if not yet rendered
-        const containerWidth = boardContainer.offsetWidth || 600; 
-        const maxCanvasSize = Math.min(containerWidth - 20, window.innerHeight * 0.7); // Leave some padding
+        let containerWidth = boardContainer.offsetWidth;
+        
+        // Fallback if offsetWidth is 0 (e.g. container is display:none initially or not yet in layout)
+        if (containerWidth === 0) {
+            // Try to get width from parent #board-area or a reasonable default
+            const boardArea = document.getElementById('board-area');
+            if (boardArea && boardArea.offsetWidth > 0) {
+                containerWidth = boardArea.offsetWidth;
+            } else {
+                // Fallback to a portion of window width if everything else fails
+                containerWidth = window.innerWidth * 0.6; // Adjust as needed
+            }
+        }
+        
+        // Use a larger portion of viewport height, ensure it fits within the container width
+        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.85);
 
-        squareSize = Math.floor(maxCanvasSize / (boardSize + 1)); // +1 for borders/padding
-        const canvasSize = squareSize * (boardSize +1); // Total canvas dimension
+        squareSize = Math.floor(maxCanvasSize / (boardSize + 1)); // +1 for lines and outer padding
+        const canvasSize = squareSize * (boardSize + 1); 
         
         canvas.width = canvasSize;
         canvas.height = canvasSize;
@@ -186,15 +211,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const whiteInfoBox = document.getElementById('player-info-white');
 
         if (currentPlayer === 1) {
-            blackInfoBox.style.border = '2px solid #007bff';
-            blackInfoBox.style.padding = '13px'; // Adjust padding to maintain size with border
-            whiteInfoBox.style.border = '1px solid #e0e0e0';
-            whiteInfoBox.style.padding = '14px';
+            blackInfoBox.classList.add('active');
+            whiteInfoBox.classList.remove('active');
         } else {
-            whiteInfoBox.style.border = '2px solid #007bff';
-            whiteInfoBox.style.padding = '13px';
-            blackInfoBox.style.border = '1px solid #e0e0e0';
-            blackInfoBox.style.padding = '14px';
+            whiteInfoBox.classList.add('active');
+            blackInfoBox.classList.remove('active');
         }
     }
 
@@ -571,8 +592,11 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessageP.textContent = 'Invalid move: Superko violation (board state repeated).';
             // Revert captures if any for this specific check, as the move is invalid
             if (capturedStones.length > 0) {
-                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length;
-                 else blackCaptures -= capturedStones.length;
+                 if (currentPlayer === 1) { // currentPlayer (Black) attempted to capture White stones.
+                     blackCaptures -= capturedStones.length; // Revert Black's capture count.
+                 } else { // currentPlayer (White) attempted to capture Black stones.
+                     whiteCaptures -= capturedStones.length; // Revert White's capture count.
+                 }
             }
             return;
         }
@@ -644,31 +668,48 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initial setup
     window.addEventListener('resize', () => {
-        resizeCanvas();
-        drawBoard();
+        resizeCanvas(); // drawBoard is called within resizeCanvas
     });
 
     document.addEventListener('keydown', (event) => {
-        if (gameMoves.length === 0) return; // No moves to navigate
+        if (gameMoves.length === 0 && currentMoveIndex === -1) return; // No moves to navigate unless SGF loaded empty
 
         if (event.key === 'ArrowLeft') {
             if (currentMoveIndex > -1) {
                 navigateToMove(currentMoveIndex - 1);
+            } else if (currentMoveIndex === -1 && gameMoves.length > 0) {
+                // Special case: if at "start of game" but moves exist (e.g. after loading SGF and pressing left from move 1)
+                // This scenario should ideally be handled by navigateToMove(-1) correctly.
             }
         } else if (event.key === 'ArrowRight') {
             if (currentMoveIndex < gameMoves.length - 1) {
                 navigateToMove(currentMoveIndex + 1);
-            } else if (currentMoveIndex === gameMoves.length - 1) {
-                // At the last recorded move. Pressing right again signifies wanting to make a new move.
-                // The board is already in the state of the last move.
-                // currentPlayer is already set to whose turn it would be *after* the last move.
-                // We just need to update the UI to reflect that we are now in "live play" mode.
+            } else if (currentMoveIndex === gameMoves.length - 1 && gameMoves.length > 0) {
                 moveNavigationInfoDiv.textContent = `End of recorded game. Your turn, ${playerNames[currentPlayer === 1 ? 'black' : 'white']}.`;
-                // No actual state change needed here, just UI feedback.
-                // Clicking on the board will now append a new move.
             }
         }
     });
 
-    initGame(false); // Initial game setup on page load, not from modal
+    // Theme Toggle Logic
+    themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        updateThemeColorsFromCSS(); // Update JS colors for canvas
+        drawBoard(); // Redraw board with new theme colors
+
+        // Save theme preference
+        if (document.body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark-mode');
+        } else {
+            localStorage.setItem('theme', 'light-mode');
+        }
+    });
+
+    // Apply saved theme on load
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark-mode') {
+        document.body.classList.add('dark-mode');
+    }
+    updateThemeColorsFromCSS(); // Initial color load for canvas
+
+    initGame(false); // Initial game setup on page load
 });

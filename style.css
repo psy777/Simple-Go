@@ -1,33 +1,63 @@
+:root {
+    --bg-color: #f0f2f5;
+    --text-color: #333;
+    --container-bg: #ffffff;
+    --container-shadow: rgba(0, 0, 0, 0.1);
+    --header-border: #e0e0e0;
+    --header-text: #2c3e50;
+    --button-bg: #f8f9fa;
+    --button-hover-bg: #e9ecef;
+    --button-border: #ccc;
+    --input-border: #ccc;
+    --focus-ring-color: rgba(0, 123, 255, 0.25);
+    --game-info-bg: #f8f9fa;
+    --game-info-border: #e0e0e0;
+    --player-name-text: #333;
+    --player-rank-text: #555;
+    --divider-color: #e0e0e0;
+    --status-error-text: #d9534f;
+    --modal-content-bg: #fff;
+    --modal-shadow: rgba(0,0,0,0.3);
+    --modal-header-text: #2c3e50;
+    --label-text: #555;
+    --board-bg-color: #e4b268; 
+    --board-line-color: #503720;
+    --board-border-color: #333;
+    --active-player-border: #007bff;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
     padding: 20px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .container {
-    background-color: #ffffff;
+    background-color: var(--container-bg);
     padding: 25px;
     border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px var(--container-shadow);
     width: 100%;
-    max-width: 900px; /* Max width for the game interface */
+    max-width: 900px; 
+    transition: background-color 0.3s;
 }
 
 header {
     text-align: center;
     margin-bottom: 20px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--header-border);
     padding-bottom: 15px;
 }
 
 header h1 {
-    color: #2c3e50;
+    color: var(--header-text);
     margin: 0 0 10px 0;
 }
 
@@ -46,86 +76,114 @@ header h1 {
 .controls select,
 .controls button {
     padding: 8px 15px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--button-border);
     border-radius: 5px;
-    background-color: #f8f9fa;
+    background-color: var(--button-bg);
+    color: var(--text-color); /* Ensure button text inherits theme color */
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
 .controls button:hover {
-    background-color: #e9ecef;
+    background-color: var(--button-hover-bg);
 }
 
 .controls select:focus,
 .controls button:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: var(--active-player-border); /* Use consistent focus color */
+    box-shadow: 0 0 0 0.2rem var(--focus-ring-color);
 }
 
 main {
     display: flex;
     gap: 20px;
-    align-items: flex-start; /* Align items to the top */
+    align-items: flex-start; 
+    flex-wrap: wrap; /* Allow game-info to wrap on smaller screens */
 }
 
 #board-area {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center board and nav info */
-    flex-grow: 1;
+    align-items: center; 
+    flex-grow: 1; 
+    width: 100%; 
+    min-width: 0; /* Allow shrinking on mobile */
 }
 
+@media (min-width: 769px) { /* Apply only on larger screens */
+    #board-area {
+        flex-basis: 65%; /* Give more space to board area */
+    }
+}
+
+
 #board-container {
-    /* flex-grow: 1; Allow board to take available space */ /* No longer needed as board-area handles flex grow */
     display: flex;
     justify-content: center;
     align-items: center;
-    min-width: 300px; /* Minimum width for the board */
-    margin-bottom: 10px; /* Space between board and nav info */
+    width: 100%; 
+    flex-grow: 1; 
+    margin-bottom: 10px; 
 }
 
 #move-navigation-info {
     font-size: 0.9em;
-    color: #555;
-    min-height: 1.2em; /* Reserve space */
+    color: var(--text-color);
+    min-height: 1.2em; 
     text-align: center;
 }
 
 #go-board-canvas {
-    border: 2px solid #333;
-    background-color: #e4b268; /* Traditional Go board color */
-    max-width: 100%; /* Ensure canvas is responsive */
-    height: auto; /* Maintain aspect ratio */
+    border: 2px solid var(--board-border-color);
+    background-color: var(--board-bg-color); 
+    max-width: 100%; 
+    height: auto; 
+    display: block; /* Remove extra space below canvas */
 }
 
 #game-info {
-    background-color: #f8f9fa;
+    background-color: var(--game-info-bg);
     padding: 15px;
     border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    width: 250px; /* Fixed width */
-    min-height: 220px; /* Minimum height to accommodate content */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--game-info-border);
+    width: 250px; 
+    box-shadow: 0 2px 4px var(--container-shadow);
     display: flex;
     flex-direction: column;
-    justify-content: space-around; /* Distribute space for a more static feel */
+    flex-shrink: 0; /* Prevent game-info from shrinking too much */
 }
 
-.player-info {
-    margin-bottom: 10px;
+@media (max-width: 768px) {
+    #game-info {
+        width: 100%; /* Full width on smaller screens */
+        margin-top: 20px;
+    }
 }
+
+
+.player-info {
+    padding: 10px; 
+    border: 1px solid transparent; 
+    border-radius: 4px; /* Add some rounding to player boxes */
+    transition: border-color 0.3s, padding 0.3s; /* Smooth transition for active state */
+}
+
+.player-info.active { 
+    border: 2px solid var(--active-player-border) !important; 
+    padding: 9px; 
+}
+
 
 .player-info .player-name {
     font-size: 1.1em;
     margin: 0 0 5px 0;
-    color: #333;
+    color: var(--player-name-text);
 }
 
 .player-info .player-rank {
     font-size: 0.85em;
-    color: #555;
+    color: var(--player-rank-text);
 }
 
 .player-details {
@@ -139,7 +197,7 @@ main {
     width: 15px;
     height: 15px;
     border-radius: 50%;
-    border: 1px solid #555;
+    border: 1px solid var(--text-color); /* Use text color for border for contrast */
 }
 
 .player-color-indicator.black {
@@ -150,30 +208,29 @@ main {
     background-color: #f0f0f0;
 }
 
-.player-info p { /* For captures text */
+.player-info p { 
     margin: 0;
 }
 
 .player-info-divider {
     border: 0;
     height: 1px;
-    background-color: #e0e0e0;
+    background-color: var(--divider-color);
     margin: 10px 0;
 }
 
 #status-message {
-    margin-top: auto; /* Pushes status message towards the bottom */
-    color: #d9534f; /* Red for errors/warnings, can be changed dynamically */
+    margin-top: auto; 
+    color: var(--status-error-text); 
     font-style: italic;
     font-size: 0.9em;
-    min-height: 2.4em; /* Reserve space for two lines if needed for error messages */
-    text-align: center; /* Center error messages */
-    margin-top: 10px;
+    min-height: 2.4em; 
+    text-align: center; 
+    padding-top: 10px; 
 }
 
 /* Modal Styles */
 .modal {
-    /* display: none; /* Hidden by default, JS will toggle */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -181,24 +238,24 @@ main {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.5); /* Dim background */
-    display: flex; /* Use flexbox to center modal content */
+    background-color: rgba(0,0,0,0.5); 
+    display: flex; 
     justify-content: center;
     align-items: center;
 }
 
 .modal-content {
-    background-color: #fff;
+    background-color: var(--modal-content-bg);
     padding: 25px;
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px var(--modal-shadow);
     width: 90%;
     max-width: 450px;
     position: relative;
 }
 
 .close-modal-btn {
-    color: #aaa;
+    color: #aaa; /* Keep this fairly neutral */
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -209,7 +266,7 @@ main {
 
 .close-modal-btn:hover,
 .close-modal-btn:focus {
-    color: black;
+    color: var(--text-color); /* Use themed text color on hover */
     text-decoration: none;
     cursor: pointer;
 }
@@ -217,7 +274,7 @@ main {
 .modal h2 {
     margin-top: 0;
     margin-bottom: 20px;
-    color: #2c3e50;
+    color: var(--modal-header-text);
     text-align: center;
 }
 
@@ -229,21 +286,23 @@ main {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    color: #555;
+    color: var(--label-text);
 }
 
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group select {
-    width: calc(100% - 22px); /* Account for padding and border */
+    width: calc(100% - 22px); 
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     box-sizing: border-box;
+    background-color: var(--container-bg); /* Theme input backgrounds */
+    color: var(--text-color); /* Theme input text */
 }
 
 .modal-content button {
-    background-color: #007bff;
+    background-color: var(--active-player-border); /* Use consistent theme color */
     color: white;
     padding: 12px 20px;
     border: none;
@@ -255,9 +314,37 @@ main {
 }
 
 .modal-content button:hover {
-    background-color: #0056b3;
+    background-color: #0056b3; /* Darken the primary color on hover */
 }
 
+/* Dark Theme Styles */
+body.dark-mode {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --container-bg: #2c2c2c;
+    --container-shadow: rgba(255, 255, 255, 0.05);
+    --header-border: #444;
+    --header-text: #e0e0e0;
+    --button-bg: #3a3a3a;
+    --button-hover-bg: #4a4a4a;
+    --button-border: #555;
+    --input-border: #555;
+    --focus-ring-color: rgba(0, 123, 255, 0.4);
+    --game-info-bg: #2c2c2c;
+    --game-info-border: #444;
+    --player-name-text: #e0e0e0;
+    --player-rank-text: #b0b0b0;
+    --divider-color: #444;
+    --status-error-text: #ff6b6b; /* Brighter red for dark mode */
+    --modal-content-bg: #2c2c2c;
+    --modal-shadow: rgba(255,255,255,0.1);
+    --modal-header-text: #e0e0e0;
+    --label-text: #b0b0b0;
+    --board-bg-color: #8B4513; /* Darker wood for board */
+    --board-line-color: #D2B48C; /* Lighter lines for contrast */
+    --board-border-color: #503720;
+    --active-player-border: #00aaff; /* Brighter blue for dark mode */
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -265,15 +352,17 @@ main {
         flex-direction: column;
         align-items: center;
     }
-
+    #board-area {
+        flex-basis: auto; /* Reset basis for column layout */
+    }
     #board-container {
-        width: 100%; /* Full width on smaller screens */
+        width: 100%; 
         margin-bottom: 20px;
     }
 
     #game-info {
         width: 100%;
-        max-width: 400px; /* Max width for game info on small screens */
+        max-width: 400px; 
     }
 
     .controls {
@@ -284,6 +373,6 @@ main {
     .controls select,
     .controls button {
         width: 100%;
-        max-width: 250px; /* Limit width of controls */
+        max-width: 250px; 
     }
 }
