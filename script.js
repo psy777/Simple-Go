@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const blackCapturesSpan = document.getElementById('black-captures');
     const whitePlayerNameDisplay = document.querySelector('#player-info-white .player-name');
     const whiteCapturesSpan = document.getElementById('white-captures');
-    const statusMessageP = document.getElementById('status-message'); // For critical errors (Suicide, Superko) that PREVENT a move
-    const moveNavigationInfoDiv = document.getElementById('move-navigation-info'); // For move count / general turn info
+    const statusMessageP = document.getElementById('status-message'); // For SGF parsing errors primarily
+    const moveNavigationInfoDiv = document.getElementById('move-navigation-info');
     const gameInfoSaveSgfBtn = document.querySelector('#game-info-footer #save-sgf-btn');
 
     // On-board Popup
@@ -48,11 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMoveIndex = -1;
 
     const ICONS = {
-        NEW_GAME: '➕', // Plus sign
-        LOAD_SGF: '📤', // Outbox tray
-        SAVE_SGF: '💾', // Floppy disk
-        THEME_LIGHT: '☀️', // Sun
-        THEME_DARK: '🌙'  // Moon
+        NEW_GAME: '➕',
+        LOAD_SGF: '📤',
+        SAVE_SGF: '💾',
+        THEME_LIGHT: '☀️',
+        THEME_DARK: '🌙'
     };
 
     const STONE_COLOR = {
@@ -76,14 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
         boardPopupMessageDiv.style.display = 'block';
         setTimeout(() => {
             boardPopupMessageDiv.style.display = 'none';
-        }, 1500); // Hide after 1.5 seconds
+        }, 1500);
     }
     
     function clearBoardPopupMessage() {
         boardPopupMessageDiv.style.display = 'none';
         boardPopupMessageDiv.textContent = '';
     }
-
 
     function updateThemeColorsFromCSS() {
         BOARD_LINE_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-line-color').trim();
@@ -101,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playerRanks.white = modalWhiteRankInput.value.trim() || "??";
             komi = parseFloat(modalKomiInput.value) || 6.5;
         } else {
-            document.title = gameTitle + " SGF";
+            document.title = gameTitle + " SGF"; // Ensure title is set on initial load too
         }
 
         board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
@@ -113,8 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentMoveIndex = -1;
 
         clearBoardPopupMessage();
-        statusMessageP.textContent = '';
-        moveNavigationInfoDiv.textContent = `New Game. ${playerNames.black}'s turn.`;
+        statusMessageP.textContent = ''; // Clear SGF parsing errors
+        moveNavigationInfoDiv.textContent = `Move 0. ${playerNames.black}'s turn.`;
 
         updateGameInfo();
         resizeCanvas();
@@ -127,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const boardArea = document.getElementById('board-area');
             containerWidth = (boardArea && boardArea.offsetWidth > 0) ? boardArea.offsetWidth : window.innerWidth * 0.6;
         }
-        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.80); // Slightly less height
+        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.80);
         squareSize = Math.floor(maxCanvasSize / (boardSize + 1));
         const canvasSize = squareSize * (boardSize + 1);
         canvas.width = canvasSize;
@@ -142,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const padding = squareSize / 2;
         ctx.strokeStyle = BOARD_LINE_COLOR;
         ctx.lineWidth = 1;
-
         for (let i = 0; i < boardSize; i++) {
             ctx.beginPath();
             ctx.moveTo(padding + i * squareSize + squareSize / 2, padding + squareSize / 2);
@@ -153,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.lineTo(padding + (boardSize - 1) * squareSize + squareSize / 2, padding + i * squareSize + squareSize / 2);
             ctx.stroke();
         }
-
         const starPointSize = Math.max(2, squareSize * 0.1);
         const starPoints = getStarPoints(boardSize);
         ctx.fillStyle = BOARD_LINE_COLOR;
@@ -162,12 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.arc(padding + point.x * squareSize + squareSize / 2, padding + point.y * squareSize + squareSize / 2, starPointSize, 0, 2 * Math.PI);
             ctx.fill();
         });
-
         for (let r = 0; r < boardSize; r++) {
             for (let c = 0; c < boardSize; c++) {
-                if (board[r][c] !== 0) {
-                    drawStone(r, c, board[r][c]);
-                }
+                if (board[r][c] !== 0) drawStone(r, c, board[r][c]);
             }
         }
     }
@@ -186,11 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const y = padding + row * squareSize + squareSize / 2;
         ctx.beginPath();
         ctx.arc(x, y, stoneRadius, 0, 2 * Math.PI);
-        if (isPreview) {
-            ctx.fillStyle = player === 1 ? STONE_COLOR.PREVIEW_BLACK : STONE_COLOR.PREVIEW_WHITE;
-        } else {
-            ctx.fillStyle = player === 1 ? STONE_COLOR.BLACK : STONE_COLOR.WHITE;
-        }
+        if (isPreview) ctx.fillStyle = player === 1 ? STONE_COLOR.PREVIEW_BLACK : STONE_COLOR.PREVIEW_WHITE;
+        else ctx.fillStyle = player === 1 ? STONE_COLOR.BLACK : STONE_COLOR.WHITE;
         ctx.fill();
         ctx.strokeStyle = player === 1 ? '#000' : '#ccc';
         ctx.lineWidth = 0.5;
@@ -215,13 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     newGameModalBtn.addEventListener('click', () => newGameModal.style.display = 'flex');
     closeModalBtn.addEventListener('click', () => newGameModal.style.display = 'none');
-    startGameBtn.addEventListener('click', () => {
-        initGame(true);
-        newGameModal.style.display = 'none';
-    });
-    window.addEventListener('click', (event) => {
-        if (event.target === newGameModal) newGameModal.style.display = 'none';
-    });
+    startGameBtn.addEventListener('click', () => { initGame(true); newGameModal.style.display = 'none'; });
+    window.addEventListener('click', (event) => { if (event.target === newGameModal) newGameModal.style.display = 'none'; });
 
     loadSgfBtn.addEventListener('click', () => sgfFileInput.click());
     sgfFileInput.addEventListener('change', (event) => {
@@ -232,14 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const sgfData = parseSgfContent(e.target.result);
                     if (sgfData) loadGameFromSgf(sgfData);
-                    else {
-                        statusMessageP.textContent = `Error parsing SGF file: ${file.name}.`;
-                        moveNavigationInfoDiv.textContent = '';
-                    }
+                    else { statusMessageP.textContent = `Error parsing SGF file: ${file.name}.`; moveNavigationInfoDiv.textContent = ''; }
                 } catch (error) {
                     console.error("Error processing SGF:", error);
-                    statusMessageP.textContent = `Error processing SGF: ${error.message}`;
-                    moveNavigationInfoDiv.textContent = '';
+                    statusMessageP.textContent = `Error processing SGF: ${error.message}`; moveNavigationInfoDiv.textContent = '';
                 }
             };
             reader.readAsText(file);
@@ -254,29 +236,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const gameNameMatch = sgfString.match(/GN\[([^\]]*)\]/);
         if (gameNameMatch) data.gameName = gameNameMatch[1].trim() || "Wren Go";
-        const sizeMatch = sgfString.match(/SZ\[(\d+)\]/);
-        if (sizeMatch) data.size = parseInt(sizeMatch[1]);
-        const komiMatch = sgfString.match(/KM\[([\d\.]+)\]/);
-        if (komiMatch) data.komi = parseFloat(komiMatch[1]);
-        const blackNameMatch = sgfString.match(/PB\[([^\]]*)\]/);
-        if (blackNameMatch) data.blackName = blackNameMatch[1].trim() || "Black";
-        const whiteNameMatch = sgfString.match(/PW\[([^\]]*)\]/);
-        if (whiteNameMatch) data.whiteName = whiteNameMatch[1].trim() || "White";
-        const blackRankMatch = sgfString.match(/BR\[([^\]]*)\]/);
-        if (blackRankMatch) data.blackRank = blackRankMatch[1].trim() || "??";
-        const whiteRankMatch = sgfString.match(/WR\[([^\]]*)\]/);
-        if (whiteRankMatch) data.whiteRank = whiteRankMatch[1].trim() || "??";
-        const moveRegex = /;([BW])\[([a-s]{2})\]/g;
-        let match;
+        const sizeMatch = sgfString.match(/SZ\[(\d+)\]/); if (sizeMatch) data.size = parseInt(sizeMatch[1]);
+        const komiMatch = sgfString.match(/KM\[([\d\.]+)\]/); if (komiMatch) data.komi = parseFloat(komiMatch[1]);
+        const blackNameMatch = sgfString.match(/PB\[([^\]]*)\]/); if (blackNameMatch) data.blackName = blackNameMatch[1].trim() || "Black";
+        const whiteNameMatch = sgfString.match(/PW\[([^\]]*)\]/); if (whiteNameMatch) data.whiteName = whiteNameMatch[1].trim() || "White";
+        const blackRankMatch = sgfString.match(/BR\[([^\]]*)\]/); if (blackRankMatch) data.blackRank = blackRankMatch[1].trim() || "??";
+        const whiteRankMatch = sgfString.match(/WR\[([^\]]*)\]/); if (whiteRankMatch) data.whiteRank = whiteRankMatch[1].trim() || "??";
+        const moveRegex = /;([BW])\[([a-s]{2})\]/g; let match;
         while ((match = moveRegex.exec(sgfString)) !== null) {
-            const player = match[1] === 'B' ? 1 : 2;
-            const coords = match[2];
+            const player = match[1] === 'B' ? 1 : 2; const coords = match[2];
             if (coords.length === 2) {
-                const c = coords.charCodeAt(0) - 'a'.charCodeAt(0);
-                const r = coords.charCodeAt(1) - 'a'.charCodeAt(0);
-                if (r >= 0 && r < data.size && c >= 0 && c < data.size) {
-                    data.moves.push({ player, r, c });
-                } else console.warn(`Invalid SGF coordinate: ${coords} for board size ${data.size}`);
+                const c = coords.charCodeAt(0) - 'a'.charCodeAt(0); const r = coords.charCodeAt(1) - 'a'.charCodeAt(0);
+                if (r >= 0 && r < data.size && c >= 0 && c < data.size) data.moves.push({ player, r, c });
+                else console.warn(`Invalid SGF coordinate: ${coords} for board size ${data.size}`);
             }
         }
         return data;
@@ -290,20 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
         modalWhiteNameInput.value = sgfData.whiteName;
         modalWhiteRankInput.value = sgfData.whiteRank;
         modalKomiInput.value = sgfData.komi;
-
-        gameTitle = sgfData.gameName;
-        boardSize = sgfData.size;
-        playerNames.black = sgfData.blackName;
-        playerNames.white = sgfData.whiteName;
-        playerRanks.black = sgfData.blackRank;
-        playerRanks.white = sgfData.whiteRank;
+        gameTitle = sgfData.gameName; boardSize = sgfData.size;
+        playerNames.black = sgfData.blackName; playerNames.white = sgfData.whiteName;
+        playerRanks.black = sgfData.blackRank; playerRanks.white = sgfData.whiteRank;
         komi = sgfData.komi;
-        initGame(false);
-        gameMoves = sgfData.moves.map(m => ({ ...m }));
+        initGame(false); // This resets gameMoves and currentMoveIndex
+        gameMoves = sgfData.moves.map(m => ({ ...m })); // Repopulate gameMoves
         if (gameMoves.length > 0) navigateToMove(gameMoves.length - 1);
         else {
             moveNavigationInfoDiv.textContent = `SGF loaded (Size: ${sgfData.size}). No moves. ${playerNames.black}'s turn.`;
-            statusMessageP.textContent = '';
+            statusMessageP.textContent = ''; // Clear SGF parsing errors if any
         }
         if (!statusMessageP.textContent.startsWith("Error")) statusMessageP.textContent = '';
     }
@@ -337,20 +305,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 else blackCaptures += capturedInStep.length;
             }
             const groupAfterPlacement = getGroup(move.r, move.c, tempBoardState);
-            if (groupAfterPlacement.liberties === 0 && capturedInStep.length === 0) {
-                 console.warn(`SGF Replay: Suicide at move ${i+1}`);
-            }
+            if (groupAfterPlacement.liberties === 0 && capturedInStep.length === 0) console.warn(`SGF Replay: Suicide at move ${i+1}`);
             board = tempBoardState;
             boardHistory.push(board.map(r => r.join('')).join('|'));
             tempCurrentPlayer = opponentInStep;
         }
         currentMoveIndex = moveIndex;
         currentPlayer = tempCurrentPlayer;
-        if (moveIndex === -1) {
-            currentPlayer = 1; // Black always starts
-            moveNavigationInfoDiv.textContent = `Start of game. ${playerNames.black}'s turn.`;
-        } else {
-            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+        if (moveIndex === -1) { // Start of game
+            currentPlayer = 1;
+            moveNavigationInfoDiv.textContent = `Move 0. ${playerNames.black}'s turn.`;
+        } else if (currentMoveIndex === gameMoves.length - 1) { // Last move of game/SGF
+            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+        } else { // Navigating somewhere in the middle
+            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
         }
         statusMessageP.textContent = '';
         updateGameInfo();
@@ -363,11 +331,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const blob = new Blob([sgfContent], { type: 'application/x-go-sgf;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `${gameTitle.replace(/[^a-z0-9]/gi, '_') || 'GoGame'}.sgf`;
+            a.download = `${gameTitle.replace(/[^a-z0-9 _-]/gi, '_') || 'GoGame'}.sgf`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(a.href); // Corrected from url to a.href
             const originalNavText = moveNavigationInfoDiv.textContent;
             moveNavigationInfoDiv.textContent = 'SGF file saved.';
             setTimeout(() => moveNavigationInfoDiv.textContent = originalNavText, 2000);
@@ -393,11 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     canvas.addEventListener('mousemove', (event) => {
         const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
-        const col = Math.floor((x - padding) / squareSize);
-        const row = Math.floor((y - padding) / squareSize);
+        const col = Math.floor((x - padding) / squareSize); const row = Math.floor((y - padding) / squareSize);
         drawBoard();
         if (row >= 0 && row < boardSize && col >= 0 && col < boardSize && board[row][col] === 0) {
             drawStone(row, col, currentPlayer, true);
@@ -408,24 +374,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     canvas.addEventListener('click', (event) => {
         const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
-        const col = Math.floor((x - padding) / squareSize);
-        const row = Math.floor((y - padding) / squareSize);
-        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
-            handleMove(row, col);
-        }
+        const col = Math.floor((x - padding) / squareSize); const row = Math.floor((y - padding) / squareSize);
+        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) handleMove(row, col);
     });
 
     function handleMove(row, col) {
         clearBoardPopupMessage();
-        statusMessageP.textContent = ''; 
+        statusMessageP.textContent = '';
 
         if (board[row][col] !== 0) {
-            const originalNavText = moveNavigationInfoDiv.textContent;
-            moveNavigationInfoDiv.textContent = 'Position already occupied.';
-            setTimeout(() => moveNavigationInfoDiv.textContent = originalNavText, 1500);
+            // This is not a rule violation, just an invalid placement.
+            // No popup, no status message. Silently ignore or provide brief non-error feedback.
+            // For now, let's keep it silent.
             return;
         }
 
@@ -434,7 +396,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let capturedStones = [];
         const opponent = (currentPlayer === 1) ? 2 : 1;
         const neighbors = getNeighbors(row, col);
-
         for (const n of neighbors) {
             if (tempBoard[n.r][n.c] === opponent) {
                 const group = getGroup(n.r, n.c, tempBoard);
@@ -452,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentGroup = getGroup(row, col, tempBoard);
         if (currentGroup.liberties === 0 && capturedStones.length === 0) {
             showBoardPopup('Illegal move, suicide');
-            if (capturedStones.length > 0) { // Should not happen if suicide logic is correct
+            if (capturedStones.length > 0) { // Revert captures if they were mistakenly added
                  if (currentPlayer === 1) whiteCaptures -= capturedStones.length;
                  else blackCaptures -= capturedStones.length;
             }
@@ -462,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const boardStateString = tempBoard.map(r => r.join('')).join('|');
         if (boardHistory.includes(boardStateString)) {
             showBoardPopup('Ko!');
-            if (capturedStones.length > 0) {
+            if (capturedStones.length > 0) { // Revert captures
                  if (currentPlayer === 1) whiteCaptures -= capturedStones.length;
                  else blackCaptures -= capturedStones.length;
             }
@@ -474,13 +435,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentMoveIndex < gameMoves.length - 1 && currentMoveIndex !== -1) {
             gameMoves = gameMoves.slice(0, currentMoveIndex + 1);
         }
-        const movePlayer = currentPlayer; // Player who made the move
+        const movePlayer = currentPlayer;
         gameMoves.push({ player: movePlayer, r: row, c: col });
         currentMoveIndex = gameMoves.length - 1;
         currentPlayer = opponent;
         updateGameInfo();
         drawBoard();
-        moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+        
+        // Update move navigation info
+        if (currentMoveIndex === gameMoves.length -1) { // If it's the latest move
+             moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+        } else { // Should not happen if logic for truncating gameMoves is correct
+            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
+        }
         if (capturedStones.length > 0) {
              moveNavigationInfoDiv.textContent += ` Captured ${capturedStones.length}.`;
         }
@@ -498,21 +465,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function getGroup(r, c, currentBoardState) {
         const player = currentBoardState[r][c];
         if (player === 0) return { stones: [], liberties: 0 };
-        const stones = [];
-        const liberties = new Set();
+        const stones = []; const liberties = new Set();
         const visited = Array(boardSize).fill(null).map(() => Array(boardSize).fill(false));
         const queue = [{ r, c }];
-        visited[r][c] = true;
-        stones.push({ r, c });
+        visited[r][c] = true; stones.push({ r, c });
         while (queue.length > 0) {
             const current = queue.shift();
             const neighbors = getNeighbors(current.r, current.c);
             for (const n of neighbors) {
                 if (currentBoardState[n.r][n.c] === 0) liberties.add(`${n.r}-${n.c}`);
                 else if (currentBoardState[n.r][n.c] === player && !visited[n.r][n.c]) {
-                    visited[n.r][n.c] = true;
-                    stones.push({ r: n.r, c: n.c });
-                    queue.push({ r: n.r, c: n.c });
+                    visited[n.r][n.c] = true; stones.push({ r: n.r, c: n.c }); queue.push({ r: n.r, c: n.c });
                 }
             }
         }
@@ -527,15 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentMoveIndex > -1) navigateToMove(currentMoveIndex - 1);
         } else if (event.key === 'ArrowRight') {
             if (currentMoveIndex < gameMoves.length - 1) navigateToMove(currentMoveIndex + 1);
-            else if (currentMoveIndex === gameMoves.length - 1 && gameMoves.length > 0) {
-                moveNavigationInfoDiv.textContent = `End of game. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+            else if (currentMoveIndex === gameMoves.length - 1 && gameMoves.length > 0) { // At the last move
+                moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
             }
         }
     });
 
     themeToggleBtn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
-        updateButtonIcons(); // Update theme icon
+        updateButtonIcons();
         updateThemeColorsFromCSS();
         drawBoard();
         localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode');
@@ -544,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark-mode') document.body.classList.add('dark-mode');
     
-    updateButtonIcons(); // Set initial icons
+    updateButtonIcons();
     updateThemeColorsFromCSS();
     initGame(false);
 });

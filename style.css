@@ -34,19 +34,21 @@ body {
     padding: 20px;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: flex-start; /* Changed from center to flex-start for better control on long pages */
     min-height: 100vh;
+    box-sizing: border-box;
     transition: background-color 0.3s, color 0.3s;
 }
 
 .container {
     background-color: var(--container-bg);
-    padding: 25px;
+    padding: 20px; /* Reduced padding slightly */
     border-radius: 10px;
     box-shadow: 0 4px 12px var(--container-shadow);
     width: 100%;
-    max-width: 1000px; /* Slightly wider for new header */
+    max-width: 1000px; 
     transition: background-color 0.3s;
+    box-sizing: border-box;
 }
 
 header {
@@ -61,7 +63,7 @@ header {
 header h1#main-title {
     color: var(--header-text);
     margin: 0;
-    font-size: 1.8em; /* Adjust as needed */
+    font-size: 1.8em; 
 }
 
 .controls {
@@ -71,9 +73,9 @@ header h1#main-title {
 }
 
 .controls button {
-    padding: 8px 12px; /* Adjust padding for icons */
-    font-size: 1.2em; /* Make icons larger */
-    line-height: 1; /* Ensure icon is centered vertically */
+    padding: 8px 12px; 
+    font-size: 1.2em; 
+    line-height: 1; 
     border: 1px solid var(--button-border);
     border-radius: 5px;
     background-color: var(--button-bg);
@@ -94,9 +96,9 @@ header h1#main-title {
 
 main {
     display: flex;
+    flex-direction: row; /* Default to horizontal for desktop */
     gap: 20px;
     align-items: flex-start; 
-    flex-wrap: wrap; 
 }
 
 #board-area {
@@ -104,17 +106,8 @@ main {
     flex-direction: column;
     align-items: center; 
     flex-grow: 1; 
-    /* width: 100%; /* This might be too aggressive on larger screens */
-    min-width: 0; 
+    min-width: 0; /* Allow shrinking */
 }
-
-@media (min-width: 769px) { 
-    #board-area {
-        flex-basis: calc(100% - 270px - 20px); /* Full width minus game-info and gap */
-        /* flex-basis: 70%; */
-    }
-}
-
 
 #board-container {
     display: flex;
@@ -122,7 +115,8 @@ main {
     align-items: center;
     width: 100%; 
     flex-grow: 1; 
-    position: relative; /* For board-popup-message positioning */
+    position: relative; 
+    margin-bottom: 10px;
 }
 
 #board-popup-message {
@@ -130,15 +124,15 @@ main {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(0,0,0,0.75);
+    background-color: rgba(0,0,0,0.8); /* Darker popup */
     color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    z-index: 100; /* Above canvas */
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 1em;
+    z-index: 100; 
     box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    text-align: center;
 }
-
 
 #go-board-canvas {
     border: 2px solid var(--board-border-color);
@@ -158,14 +152,13 @@ main {
     display: flex;
     flex-direction: column;
     flex-shrink: 0; 
-    /* Removed justify-content: space-around to reduce extra space */
 }
 
 #game-info-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px; /* Add some space above this footer */
+    margin-top: 10px; 
     padding-top: 10px;
     border-top: 1px solid var(--divider-color);
 }
@@ -174,49 +167,33 @@ main {
     font-size: 0.9em;
     color: var(--text-color);
     min-height: 1.2em; 
-    text-align: left; /* Align to left, next to save button */
+    text-align: left; 
     flex-grow: 1;
+    margin-right: 10px; 
 }
 
 #game-info-footer #save-sgf-btn {
     padding: 6px 10px;
-    font-size: 1em; /* Smaller icon for save */
+    font-size: 1.1em; 
+    flex-shrink: 0; 
 }
-
-
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        gap: 10px;
-    }
-    main {
-        flex-direction: column;
-        align-items: center; /* Center items in main on mobile */
-    }
-    #board-area {
-        width: 100%;
-        flex-basis: auto;
-    }
-    #game-info {
-        width: 100%;
-        max-width: 400px; 
-        margin-top: 20px;
-    }
-}
-
 
 .player-info {
     padding: 10px; 
     border: 1px solid transparent; 
     border-radius: 4px; 
     transition: border-color 0.3s, padding 0.3s; 
+    margin-bottom: 5px; /* Reduced margin */
 }
+.player-info:last-of-type {
+    margin-bottom: 0; /* Remove margin from last player info if needed */
+}
+
 
 .player-info.active { 
     border: 2px solid var(--active-player-border) !important; 
     padding: 9px; 
 }
-
 
 .player-info .player-name {
     font-size: 1.1em;
@@ -243,180 +220,106 @@ main {
     border: 1px solid var(--text-color); 
 }
 
-.player-color-indicator.black {
-    background-color: #111;
-}
-
-.player-color-indicator.white {
-    background-color: #f0f0f0;
-}
-
-.player-info p { 
-    margin: 0;
-}
+.player-color-indicator.black { background-color: #111; }
+.player-color-indicator.white { background-color: #f0f0f0; }
+.player-info p { margin: 0; }
 
 .player-info-divider {
     border: 0;
     height: 1px;
     background-color: var(--divider-color);
-    margin: 10px 0;
+    margin: 5px 0; /* Reduced margin */
 }
 
 #status-message {
-    /* margin-top: auto; /* Removed to prevent pushing content up */
     color: var(--status-error-text); 
     font-style: italic;
     font-size: 0.9em;
-    min-height: 1.2em; /* Reduced min-height as it's only for errors now */
+    min-height: 1.2em; 
     text-align: center; 
-    padding-top: 10px; 
-    margin-bottom: 0; /* Remove bottom margin if any */
+    padding-top: 5px; 
+    margin-top: 10px; 
+    margin-bottom: 0;
 }
 
 /* Modal Styles */
 .modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5); 
-    display: flex; 
-    justify-content: center;
-    align-items: center;
+    position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+    overflow: auto; background-color: rgba(0,0,0,0.5); 
+    display: flex; justify-content: center; align-items: center;
 }
-
 .modal-content {
-    background-color: var(--modal-content-bg);
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px var(--modal-shadow);
-    width: 90%;
-    max-width: 450px;
-    position: relative;
+    background-color: var(--modal-content-bg); padding: 25px; border-radius: 8px;
+    box-shadow: 0 5px 15px var(--modal-shadow); width: 90%; max-width: 450px; position: relative;
 }
-
 .close-modal-btn {
-    color: #aaa; /* Keep this fairly neutral */
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    position: absolute;
-    top: 10px;
-    right: 15px;
+    color: #aaa; float: right; font-size: 28px; font-weight: bold;
+    position: absolute; top: 10px; right: 15px;
 }
-
-.close-modal-btn:hover,
-.close-modal-btn:focus {
-    color: var(--text-color); /* Use themed text color on hover */
-    text-decoration: none;
-    cursor: pointer;
+.close-modal-btn:hover, .close-modal-btn:focus {
+    color: var(--text-color); text-decoration: none; cursor: pointer;
 }
-
-.modal h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: var(--modal-header-text);
-    text-align: center;
+.modal h2 { margin-top: 0; margin-bottom: 20px; color: var(--modal-header-text); text-align: center; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--label-text); }
+.form-group input[type="text"], .form-group input[type="number"], .form-group select {
+    width: calc(100% - 22px); padding: 10px; border: 1px solid var(--input-border);
+    border-radius: 4px; box-sizing: border-box;
+    background-color: var(--container-bg); color: var(--text-color);
 }
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: var(--label-text);
-}
-
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group select {
-    width: calc(100% - 22px); 
-    padding: 10px;
-    border: 1px solid var(--input-border);
-    border-radius: 4px;
-    box-sizing: border-box;
-    background-color: var(--container-bg); /* Theme input backgrounds */
-    color: var(--text-color); /* Theme input text */
-}
-
 .modal-content button {
-    background-color: var(--active-player-border); /* Use consistent theme color */
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    width: 100%;
-    transition: background-color 0.2s ease;
+    background-color: var(--active-player-border); color: white;
+    padding: 12px 20px; border: none; border-radius: 5px;
+    cursor: pointer; font-size: 1em; width: 100%; transition: background-color 0.2s ease;
 }
-
-.modal-content button:hover {
-    background-color: #0056b3; /* Darken the primary color on hover */
-}
+.modal-content button:hover { background-color: #0056b3; }
 
 /* Dark Theme Styles */
 body.dark-mode {
-    --bg-color: #1a1a1a;
-    --text-color: #e0e0e0;
-    --container-bg: #2c2c2c;
-    --container-shadow: rgba(255, 255, 255, 0.05);
-    --header-border: #444;
-    --header-text: #e0e0e0;
-    --button-bg: #3a3a3a;
-    --button-hover-bg: #4a4a4a;
-    --button-border: #555;
-    --input-border: #555;
-    --focus-ring-color: rgba(0, 123, 255, 0.4);
-    --game-info-bg: #2c2c2c;
-    --game-info-border: #444;
-    --player-name-text: #e0e0e0;
-    --player-rank-text: #b0b0b0;
-    --divider-color: #444;
-    --status-error-text: #ff6b6b; /* Brighter red for dark mode */
-    --modal-content-bg: #2c2c2c;
-    --modal-shadow: rgba(255,255,255,0.1);
-    --modal-header-text: #e0e0e0;
-    --label-text: #b0b0b0;
-    --board-bg-color: #8B4513; /* Darker wood for board */
-    --board-line-color: #D2B48C; /* Lighter lines for contrast */
-    --board-border-color: #503720;
-    --active-player-border: #00aaff; /* Brighter blue for dark mode */
+    --bg-color: #1a1a1a; --text-color: #e0e0e0; --container-bg: #2c2c2c;
+    --container-shadow: rgba(255, 255, 255, 0.05); --header-border: #444; --header-text: #e0e0e0;
+    --button-bg: #3a3a3a; --button-hover-bg: #4a4a4a; --button-border: #555;
+    --input-border: #555; --focus-ring-color: rgba(0, 123, 255, 0.4);
+    --game-info-bg: #2c2c2c; --game-info-border: #444; --player-name-text: #e0e0e0;
+    --player-rank-text: #b0b0b0; --divider-color: #444; --status-error-text: #ff6b6b;
+    --modal-content-bg: #2c2c2c; --modal-shadow: rgba(255,255,255,0.1);
+    --modal-header-text: #e0e0e0; --label-text: #b0b0b0; --board-bg-color: #8B4513;
+    --board-line-color: #D2B48C; --board-border-color: #503720; --active-player-border: #00aaff;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments for Mobile */
 @media (max-width: 768px) {
-    main {
-        flex-direction: column;
-        align-items: center;
+    body {
+        padding: 10px; /* Reduce body padding on mobile */
     }
-    #board-area {
-        flex-basis: auto; /* Reset basis for column layout */
+    .container {
+        padding: 15px; /* Reduce container padding on mobile */
     }
-    #board-container {
-        width: 100%; 
-        margin-bottom: 20px;
+    header {
+        flex-direction: column; /* Stack title and controls */
+        align-items: center; 
+        gap: 10px;
     }
-
-    #game-info {
-        width: 100%;
-        max-width: 400px; 
-    }
-
     .controls {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: column; /* Stack control buttons */
+        align-items: center;
+        width: 100%;
     }
-
-    .controls select,
     .controls button {
         width: 100%;
-        max-width: 250px; 
+        max-width: 220px; /* Limit button width on mobile */
+    }
+    main {
+        flex-direction: column;
+        align-items: center; /* Center board and game info */
+    }
+    #board-area {
+        width: 100%;
+        flex-basis: auto; /* Reset basis for column layout */
+    }
+    #game-info {
+        width: 100%;
+        max-width: 350px; /* Slightly narrower game info on mobile */
+        margin-top: 20px;
     }
 }
