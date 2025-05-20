@@ -60,9 +60,44 @@ header {
     margin-bottom: 20px;
     border-bottom: 1px solid var(--header-border);
     padding-bottom: 15px;
+    /* New header structure styles */
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* Left, Center (flexible), Right */
+    gap: 15px; /* Gap between sections */
 }
 
-.header-title-area {
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.header-center { /* This is the existing header-title-area */
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the logo/title area */
+}
+
+/* Style for text-based buttons in header */
+.text-button {
+    background: none;
+    border: none;
+    color: var(--header-text); /* Or var(--text-color) or a link color */
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    border-radius: 4px;
+}
+.text-button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+#user-greeting span {
+    margin-right: 8px;
+    font-size: 0.9em;
+}
+
+
+.header-title-area { /* Retaining for specificity if needed, but header-center is primary now */
     display: flex;
     align-items: center;
 }
@@ -289,6 +324,15 @@ main {
 }
 .modal-content button:hover { background-color: #0056b3; }
 
+/* Error messages in modals */
+.error-message {
+    color: var(--status-error-text);
+    font-size: 0.85em;
+    margin-top: 10px;
+    text-align: center;
+}
+
+
 /* Dark Theme Styles */
 body.dark-mode {
     --bg-color: #1a1a1a; --text-color: #e0e0e0; --container-bg: #2c2c2c;
@@ -311,24 +355,26 @@ body:not(.dark-mode) .mobile-logo#mobile-logo-dark { display: none; }
 /* Responsive adjustments for Mobile */
 @media (max-width: 768px) {
     header {
-        flex-direction: column; 
-        align-items: center; 
-        gap: 15px; 
+        /* Adjust grid for mobile if needed, or let items wrap naturally */
+        grid-template-columns: 1fr; /* Stack header sections on mobile */
+        justify-items: center; /* Center items within the grid cell */
     }
-    .header-title-area .desktop-title { display: none; } /* Hide desktop title on mobile */
+    .header-left, .header-center, .header-right {
+        justify-content: center; /* Center content within each header section on mobile */
+        width: 100%; /* Allow sections to take full width if they stack */
+    }
+    .header-title-area .desktop-title { display: none; } 
     /* .header-title-area .mobile-logo is handled by dark/light mode specific rules now */
 
-    .controls {
-        flex-direction: row; /* Keep controls horizontal */
+    .controls { /* This is now .header-right */
+        flex-direction: row; 
         justify-content: center; 
-        flex-wrap: wrap; /* Allow wrapping if too many buttons */
+        flex-wrap: wrap; 
         width: 100%;
     }
-    .controls button {
-        /* width: auto; /* Let buttons size to content + padding */
-        /* max-width: none; */
-        flex-grow: 1; /* Allow buttons to share space */
-        max-width: 100px; /* Max width per button to prevent too wide buttons */
+    .controls button { /* This is now .header-right button */
+        flex-grow: 1; 
+        max-width: 100px; 
     }
     main {
         flex-direction: column;

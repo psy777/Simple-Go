@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // New Game Modal Elements
     const newGameModal = document.getElementById('new-game-modal');
-    const closeModalBtn = document.querySelector('.close-modal-btn');
+    // const closeModalBtn = document.querySelector('.close-modal-btn'); // Will be handled by a general selector
     const startGameBtn = document.getElementById('start-game-btn');
     const modalGameTitleInput = document.getElementById('modal-game-title');
     const modalBoardSizeSelect = document.getElementById('modal-board-size-select');
@@ -40,6 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalWhiteNameInput = document.getElementById('modal-white-name');
     const modalWhiteRankInput = document.getElementById('modal-white-rank');
     const modalKomiInput = document.getElementById('modal-komi');
+
+    // Auth Modal Elements
+    const loginModalBtn = document.getElementById('login-modal-btn');
+    const registerModalBtn = document.getElementById('register-modal-btn');
+    const loginModal = document.getElementById('login-modal');
+    const registerModal = document.getElementById('register-modal');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const logoutBtn = document.getElementById('logout-btn');
+    const authLinksDiv = document.getElementById('auth-links');
+    const userGreetingDiv = document.getElementById('user-greeting');
+    const usernameDisplaySpan = document.getElementById('username-display');
+    const loginErrorMessageP = document.getElementById('login-error-message');
+    const registerErrorMessageP = document.getElementById('register-error-message');
+
+    // General Modal Close Buttons (using data attribute)
+    const allCloseModalBtns = document.querySelectorAll('.close-modal-btn');
+
+
+    // API Base URL (for backend)
+    const API_BASE_URL = 'http://localhost:5001/api'; // Adjust if your backend runs elsewhere
 
     // Game State Variables
     let gameTitle = "wrengo"; // Keep lowercase as per user's HTML
@@ -202,10 +223,151 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    newGameModalBtn.addEventListener('click', () => newGameModal.style.display = 'flex');
-    closeModalBtn.addEventListener('click', () => newGameModal.style.display = 'none');
-    startGameBtn.addEventListener('click', () => { initGame(true); newGameModal.style.display = 'none'; });
-    window.addEventListener('click', (event) => { if (event.target === newGameModal) newGameModal.style.display = 'none'; });
+    // --- Modal Handling ---
+    function openModal(modalElement) {
+        if (modalElement) modalElement.style.display = 'flex';
+    }
+
+    function closeModal(modalElement) {
+        if (modalElement) modalElement.style.display = 'none';
+    }
+
+    newGameModalBtn.addEventListener('click', () => openModal(newGameModal));
+    if (loginModalBtn) loginModalBtn.addEventListener('click', () => openModal(loginModal));
+    if (registerModalBtn) registerModalBtn.addEventListener('click', () => openModal(registerModal));
+
+    allCloseModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modalId = btn.dataset.modalId;
+            if (modalId) {
+                const modalToClose = document.getElementById(modalId);
+                closeModal(modalToClose);
+            }
+        });
+    });
+    
+    startGameBtn.addEventListener('click', () => { initGame(true); closeModal(newGameModal); });
+
+    // Close modal if clicked outside of modal-content
+    window.addEventListener('click', (event) => {
+        if (event.target.classList.contains('modal')) {
+            closeModal(event.target);
+        }
+    });
+
+    // --- Authentication Logic ---
+    async function handleRegister(event) {
+        event.preventDefault();
+        registerErrorMessageP.textContent = '';
+        registerErrorMessageP.style.display = 'none';
+        const username = document.getElementById('register-username').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                localStorage.setItem('authToken', data.token);
+                updateAuthUI(true, data.user);
+                closeModal(registerModal);
+                registerForm.reset();
+            } else {
+                registerErrorMessageP.textContent = data.message || 'Registration failed.';
+                registerErrorMessageP.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            registerErrorMessageP.textContent = 'An error occurred. Please try again.';
+            registerErrorMessageP.style.display = 'block';
+        }
+    }
+
+    async function handleLogin(event) {
+        event.preventDefault();
+        loginErrorMessageP.textContent = '';
+        loginErrorMessageP.style.display = 'none';
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                localStorage.setItem('authToken', data.token);
+                updateAuthUI(true, data.user);
+                closeModal(loginModal);
+                loginForm.reset();
+            } else {
+                loginErrorMessageP.textContent = data.message || 'Login failed.';
+                loginErrorMessageP.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            loginErrorMessageP.textContent = 'An error occurred. Please try again.';
+            loginErrorMessageP.style.display = 'block';
+        }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('authToken');
+        updateAuthUI(false);
+        // Potentially redirect or refresh parts of the UI as needed
+    }
+
+    function updateAuthUI(isLoggedIn, userData = null) {
+        if (isLoggedIn && authLinksDiv && userGreetingDiv && usernameDisplaySpan) {
+            authLinksDiv.style.display = 'none';
+            userGreetingDiv.style.display = 'flex';
+            usernameDisplaySpan.textContent = `Hi, ${userData?.username || 'User'}!`;
+        } else if (authLinksDiv && userGreetingDiv) {
+            authLinksDiv.style.display = 'flex';
+            userGreetingDiv.style.display = 'none';
+            if(usernameDisplaySpan) usernameDisplaySpan.textContent = '';
+        }
+    }
+    
+    async function checkInitialAuthState() {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                const data = await response.json();
+                if (data.success && data.data) {
+                    updateAuthUI(true, data.data);
+                } else {
+                    // Token might be invalid or expired
+                    localStorage.removeItem('authToken');
+                    updateAuthUI(false);
+                }
+            } catch (error) {
+                console.error('Error verifying token:', error);
+                localStorage.removeItem('authToken');
+                updateAuthUI(false);
+            }
+        } else {
+            updateAuthUI(false);
+        }
+    }
+
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+    if (registerForm) registerForm.addEventListener('submit', handleRegister);
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
 
     loadSgfBtn.addEventListener('click', () => sgfFileInput.click());
     sgfFileInput.addEventListener('change', (event) => { /* ... (no change) ... */ 
@@ -493,5 +655,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateAssetSources(); // Initial asset sources
     updateThemeColorsFromCSS();
+    checkInitialAuthState(); // Check auth state when page loads
     initGame(false);
 });
