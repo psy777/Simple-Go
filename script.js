@@ -71,10 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mobile-logo-dark').style.display = isDarkMode ? 'inline-block' : 'none';
 
         // Update button icons
-        newGameModalBtn.querySelector('img').src = isDarkMode ? 'dark mode new game symbol.svg' : 'light mode new game symbol.svg';
-        loadSgfBtn.querySelector('img').src = isDarkMode ? 'dark mode upload button.svg' : 'light mode upload button.svg';
-        themeToggleBtn.querySelector('img').src = isDarkMode ? 'light mode toggle.svg' : 'dark mode toggle.svg'; // Icon shows opposite action
-        gameInfoSaveSgfBtn.querySelector('img').src = isDarkMode ? 'dark mode save button.svg' : 'light mode save button.svg';
+        newGameModalBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode new game symbol.svg' : 'assets/light mode new game symbol.svg';
+        loadSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode upload button.svg' : 'assets/light mode upload button.svg';
+        themeToggleBtn.querySelector('img').src = isDarkMode ? 'assets/light mode toggle.svg' : 'assets/dark mode toggle.svg'; // Icon shows opposite action
+        gameInfoSaveSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode save button.svg' : 'assets/light mode save button.svg';
     }
 
 
