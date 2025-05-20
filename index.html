@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wrengo</title>
+    <title>wrengo SGF</title>
+    <link rel="icon" href="wrengo favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" rel="stylesheet">
@@ -12,12 +13,16 @@
 <body>
     <div class="container">
         <header>
-            <h1 id="main-title">wrengo <span class="title-sgf">markdown</span></h1>
+            <div class="header-title-area">
+                <img src="light mode mobile wrengo logo.svg" alt="Wrengo Logo" id="mobile-logo-light" class="mobile-logo">
+                <img src="dark mode mobile wrengo logo.svg" alt="Wrengo Logo Dark" id="mobile-logo-dark" class="mobile-logo" style="display:none;">
+                <h1 id="main-title" class="desktop-title">wrengo <span class="title-sgf">SGF</span></h1>
+            </div>
             <div class="controls">
-                <button id="new-game-modal-btn" title="New Game">[NG]</button>
-                <button id="load-sgf-btn" title="Load SGF">[UL]</button>
+                <button id="new-game-modal-btn" title="New Game"><img src="light mode new game symbol.svg" alt="New Game"></button>
+                <button id="load-sgf-btn" title="Load SGF"><img src="light mode upload button.svg" alt="Load SGF"></button>
                 <input type="file" id="sgf-file-input" accept=".sgf" style="display: none;">
-                <button id="theme-toggle-btn" title="Toggle Theme">[Theme]</button>
+                <button id="theme-toggle-btn" title="Toggle Theme"><img src="light mode toggle.svg" alt="Toggle Theme"></button>
             </div>
         </header>
 
@@ -46,11 +51,19 @@
                 </div>
                 <div id="game-info-footer">
                     <div id="move-navigation-info"></div>
-                    <button id="save-sgf-btn" title="Save SGF">[Save]</button>
+                    <button id="save-sgf-btn" title="Save SGF"><img src="light mode save button.svg" alt="Save SGF"></button>
                 </div>
                 <p id="status-message"></p> 
             </div>
         </main>
+
+        <div id="mobile-nav-controls" class="mobile-only">
+            <button id="mobile-nav-first" title="First Move">⏮</button>
+            <button id="mobile-nav-prev" title="Previous Move">⏪</button>
+            <span id="mobile-nav-movenum" class="move-number-display">0</span>
+            <button id="mobile-nav-next" title="Next Move">⏩</button>
+            <button id="mobile-nav-last" title="Last Move">⏭</button>
+        </div>
     </div>
 
     <!-- New Game Modal -->

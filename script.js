@@ -13,12 +13,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const blackCapturesSpan = document.getElementById('black-captures');
     const whitePlayerNameDisplay = document.querySelector('#player-info-white .player-name');
     const whiteCapturesSpan = document.getElementById('white-captures');
-    const statusMessageP = document.getElementById('status-message'); // For SGF parsing errors primarily
+    const statusMessageP = document.getElementById('status-message');
     const moveNavigationInfoDiv = document.getElementById('move-navigation-info');
     const gameInfoSaveSgfBtn = document.querySelector('#game-info-footer #save-sgf-btn');
 
     // On-board Popup
     const boardPopupMessageDiv = document.getElementById('board-popup-message');
+
+    // Mobile Navigation
+    const mobileNavControls = document.getElementById('mobile-nav-controls');
+    const mobileNavFirstBtn = document.getElementById('mobile-nav-first');
+    const mobileNavPrevBtn = document.getElementById('mobile-nav-prev');
+    const mobileNavMoveNextBtn = document.getElementById('mobile-nav-next'); // This is the "Next" button
+    const mobileNavLastBtn = document.getElementById('mobile-nav-last');
+    const mobileNavMoveNumSpan = document.getElementById('mobile-nav-movenum');
+
 
     // New Game Modal Elements
     const newGameModal = document.getElementById('new-game-modal');
@@ -33,50 +42,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalKomiInput = document.getElementById('modal-komi');
 
     // Game State Variables
-    let gameTitle = "Wren Go";
+    let gameTitle = "wrengo"; // Keep lowercase as per user's HTML
     let boardSize = parseInt(modalBoardSizeSelect.value);
     let playerNames = { black: "Black", white: "White" };
     let playerRanks = { black: "??", white: "??" };
     let komi = 6.5;
     let squareSize;
     let board = [];
-    let currentPlayer = 1; // 1 for Black, 2 for White
+    let currentPlayer = 1;
     let blackCaptures = 0;
     let whiteCaptures = 0;
     let boardHistory = [];
     let gameMoves = [];
     let currentMoveIndex = -1;
 
-    const ICONS = {
-        NEW_GAME: '➕',
-        LOAD_SGF: '📤',
-        SAVE_SGF: '💾',
-        THEME_LIGHT: '☀️',
-        THEME_DARK: '🌙'
-    };
-
     const STONE_COLOR = {
-        BLACK: '#111',
-        WHITE: '#f0f0f0',
-        PREVIEW_BLACK: 'rgba(17, 17, 17, 0.5)',
-        PREVIEW_WHITE: 'rgba(240, 240, 240, 0.5)'
+        BLACK: '#111', WHITE: '#f0f0f0',
+        PREVIEW_BLACK: 'rgba(17, 17, 17, 0.5)', PREVIEW_WHITE: 'rgba(240, 240, 240, 0.5)'
     };
     let BOARD_LINE_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-line-color').trim() || '#503720';
     let BOARD_BG_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-bg-color').trim() || '#e4b268';
 
-    function updateButtonIcons() {
-        newGameModalBtn.innerHTML = ICONS.NEW_GAME;
-        loadSgfBtn.innerHTML = ICONS.LOAD_SGF;
-        gameInfoSaveSgfBtn.innerHTML = ICONS.SAVE_SGF;
-        themeToggleBtn.innerHTML = document.body.classList.contains('dark-mode') ? ICONS.THEME_LIGHT : ICONS.THEME_DARK;
+    function updateAssetSources() {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        
+        // Update header logos
+        document.getElementById('mobile-logo-light').style.display = isDarkMode ? 'none' : 'inline-block';
+        document.getElementById('mobile-logo-dark').style.display = isDarkMode ? 'inline-block' : 'none';
+
+        // Update button icons
+        newGameModalBtn.querySelector('img').src = isDarkMode ? 'dark mode new game symbol.svg' : 'light mode new game symbol.svg';
+        loadSgfBtn.querySelector('img').src = isDarkMode ? 'dark mode upload button.svg' : 'light mode upload button.svg';
+        themeToggleBtn.querySelector('img').src = isDarkMode ? 'light mode toggle.svg' : 'dark mode toggle.svg'; // Icon shows opposite action
+        gameInfoSaveSgfBtn.querySelector('img').src = isDarkMode ? 'dark mode save button.svg' : 'light mode save button.svg';
     }
+
 
     function showBoardPopup(message) {
         boardPopupMessageDiv.textContent = message;
         boardPopupMessageDiv.style.display = 'block';
-        setTimeout(() => {
-            boardPopupMessageDiv.style.display = 'none';
-        }, 1500);
+        setTimeout(() => { boardPopupMessageDiv.style.display = 'none'; }, 1500);
     }
     
     function clearBoardPopupMessage() {
@@ -89,9 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
         BOARD_BG_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-bg-color').trim();
     }
 
+    function updateMoveNavigationText() {
+        if (currentMoveIndex === -1 && gameMoves.length === 0) { // New game, no moves yet
+            moveNavigationInfoDiv.textContent = `Move 0. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+            mobileNavMoveNumSpan.textContent = '0';
+        } else if (currentMoveIndex === -1 && gameMoves.length > 0) { // Navigated to before first move of a loaded game
+             moveNavigationInfoDiv.textContent = `Start. ${playerNames.black}'s turn.`; // Player 1 always starts
+             mobileNavMoveNumSpan.textContent = '0';
+        } else if (currentMoveIndex === gameMoves.length - 1) { // At the last move
+            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+            mobileNavMoveNumSpan.textContent = (currentMoveIndex + 1).toString();
+        } else { // Navigating somewhere in the middle
+            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
+            mobileNavMoveNumSpan.textContent = (currentMoveIndex + 1).toString();
+        }
+    }
+
+
     function initGame(isModalStart = false) {
         if (isModalStart) {
-            gameTitle = modalGameTitleInput.value.trim() || "Wren Go";
+            gameTitle = modalGameTitleInput.value.trim() || "wrengo";
             document.title = gameTitle + " SGF";
             boardSize = parseInt(modalBoardSizeSelect.value);
             playerNames.black = modalBlackNameInput.value.trim() || "Black";
@@ -100,23 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
             playerRanks.white = modalWhiteRankInput.value.trim() || "??";
             komi = parseFloat(modalKomiInput.value) || 6.5;
         } else {
-            document.title = gameTitle + " SGF"; // Ensure title is set on initial load too
+            document.title = gameTitle + " SGF";
         }
-
         board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
-        currentPlayer = 1;
-        blackCaptures = 0;
-        whiteCaptures = 0;
-        boardHistory = [];
-        gameMoves = [];
-        currentMoveIndex = -1;
-
-        clearBoardPopupMessage();
-        statusMessageP.textContent = ''; // Clear SGF parsing errors
-        moveNavigationInfoDiv.textContent = `Move 0. ${playerNames.black}'s turn.`;
-
-        updateGameInfo();
-        resizeCanvas();
+        currentPlayer = 1; blackCaptures = 0; whiteCaptures = 0;
+        boardHistory = []; gameMoves = []; currentMoveIndex = -1;
+        clearBoardPopupMessage(); statusMessageP.textContent = '';
+        updateMoveNavigationText();
+        updateGameInfo(); resizeCanvas();
     }
 
     function resizeCanvas() {
@@ -124,56 +137,42 @@ document.addEventListener('DOMContentLoaded', () => {
         let containerWidth = boardContainer.offsetWidth;
         if (containerWidth === 0) {
             const boardArea = document.getElementById('board-area');
-            containerWidth = (boardArea && boardArea.offsetWidth > 0) ? boardArea.offsetWidth : window.innerWidth * 0.6;
+            containerWidth = (boardArea && boardArea.offsetWidth > 0) ? boardArea.offsetWidth : window.innerWidth * 0.8; // Use more width
         }
-        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.80);
+        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.75); // Adjusted height usage
         squareSize = Math.floor(maxCanvasSize / (boardSize + 1));
         const canvasSize = squareSize * (boardSize + 1);
-        canvas.width = canvasSize;
-        canvas.height = canvasSize;
+        canvas.width = canvasSize; canvas.height = canvasSize;
         drawBoard();
     }
 
     function drawBoard() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = BOARD_BG_COLOR;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const padding = squareSize / 2;
-        ctx.strokeStyle = BOARD_LINE_COLOR;
-        ctx.lineWidth = 1;
+        ctx.fillStyle = BOARD_BG_COLOR; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const padding = squareSize / 2; ctx.strokeStyle = BOARD_LINE_COLOR; ctx.lineWidth = 1;
         for (let i = 0; i < boardSize; i++) {
-            ctx.beginPath();
-            ctx.moveTo(padding + i * squareSize + squareSize / 2, padding + squareSize / 2);
-            ctx.lineTo(padding + i * squareSize + squareSize / 2, padding + (boardSize - 1) * squareSize + squareSize / 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(padding + squareSize / 2, padding + i * squareSize + squareSize / 2);
-            ctx.lineTo(padding + (boardSize - 1) * squareSize + squareSize / 2, padding + i * squareSize + squareSize / 2);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(padding + i * squareSize + squareSize / 2, padding + squareSize / 2);
+            ctx.lineTo(padding + i * squareSize + squareSize / 2, padding + (boardSize - 1) * squareSize + squareSize / 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(padding + squareSize / 2, padding + i * squareSize + squareSize / 2);
+            ctx.lineTo(padding + (boardSize - 1) * squareSize + squareSize / 2, padding + i * squareSize + squareSize / 2); ctx.stroke();
         }
-        const starPointSize = Math.max(2, squareSize * 0.1);
-        const starPoints = getStarPoints(boardSize);
+        const starPointSize = Math.max(2, squareSize * 0.1); const starPoints = getStarPoints(boardSize);
         ctx.fillStyle = BOARD_LINE_COLOR;
         starPoints.forEach(point => {
-            ctx.beginPath();
-            ctx.arc(padding + point.x * squareSize + squareSize / 2, padding + point.y * squareSize + squareSize / 2, starPointSize, 0, 2 * Math.PI);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(padding + point.x * squareSize + squareSize / 2, padding + point.y * squareSize + squareSize / 2, starPointSize, 0, 2 * Math.PI); ctx.fill();
         });
         for (let r = 0; r < boardSize; r++) {
-            for (let c = 0; c < boardSize; c++) {
-                if (board[r][c] !== 0) drawStone(r, c, board[r][c]);
-            }
+            for (let c = 0; c < boardSize; c++) { if (board[r][c] !== 0) drawStone(r, c, board[r][c]); }
         }
     }
 
-    function getStarPoints(size) {
+    function getStarPoints(size) { /* ... (no change) ... */ 
         if (size === 9) return [{x:2,y:2},{x:6,y:2},{x:2,y:6},{x:6,y:6},{x:4,y:4}];
         if (size === 13) return [{x:3,y:3},{x:9,y:3},{x:3,y:9},{x:9,y:9},{x:6,y:6}];
         if (size === 19) return [{x:3,y:3},{x:9,y:3},{x:15,y:3},{x:3,y:9},{x:9,y:9},{x:15,y:9},{x:3,y:15},{x:9,y:15},{x:15,y:15}];
         return [];
     }
-
-    function drawStone(row, col, player, isPreview = false) {
+    function drawStone(row, col, player, isPreview = false) { /* ... (no change) ... */ 
         const padding = squareSize / 2;
         const stoneRadius = squareSize * 0.45;
         const x = padding + col * squareSize + squareSize / 2;
@@ -187,8 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineWidth = 0.5;
         ctx.stroke();
     }
-
-    function updateGameInfo() {
+    function updateGameInfo() { /* ... (no change to highlighting logic) ... */ 
         blackPlayerNameDisplay.innerHTML = `${playerNames.black} <span class="player-rank">(${playerRanks.black})</span>`;
         whitePlayerNameDisplay.innerHTML = `${playerNames.white} <span class="player-rank">(${playerRanks.white})</span>`;
         blackCapturesSpan.textContent = blackCaptures;
@@ -210,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', (event) => { if (event.target === newGameModal) newGameModal.style.display = 'none'; });
 
     loadSgfBtn.addEventListener('click', () => sgfFileInput.click());
-    sgfFileInput.addEventListener('change', (event) => {
+    sgfFileInput.addEventListener('change', (event) => { /* ... (no change) ... */ 
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -229,13 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function parseSgfContent(sgfString) {
+    function parseSgfContent(sgfString) { /* ... (no change to SGF parsing itself) ... */ 
         const data = {
             size: 19, komi: 6.5, moves: [], rules: "Japanese",
-            gameName: "Wren Go", blackName: "Black", whiteName: "White", blackRank: "??", whiteRank: "??"
+            gameName: "wrengo", blackName: "Black", whiteName: "White", blackRank: "??", whiteRank: "??"
         };
         const gameNameMatch = sgfString.match(/GN\[([^\]]*)\]/);
-        if (gameNameMatch) data.gameName = gameNameMatch[1].trim() || "Wren Go";
+        if (gameNameMatch) data.gameName = gameNameMatch[1].trim() || "wrengo";
         const sizeMatch = sgfString.match(/SZ\[(\d+)\]/); if (sizeMatch) data.size = parseInt(sizeMatch[1]);
         const komiMatch = sgfString.match(/KM\[([\d\.]+)\]/); if (komiMatch) data.komi = parseFloat(komiMatch[1]);
         const blackNameMatch = sgfString.match(/PB\[([^\]]*)\]/); if (blackNameMatch) data.blackName = blackNameMatch[1].trim() || "Black";
@@ -254,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
-    function loadGameFromSgf(sgfData) {
+    function loadGameFromSgf(sgfData) { /* ... (no change to core SGF loading logic) ... */ 
         modalGameTitleInput.value = sgfData.gameName;
         modalBoardSizeSelect.value = sgfData.size.toString();
         modalBlackNameInput.value = sgfData.blackName;
@@ -266,12 +264,12 @@ document.addEventListener('DOMContentLoaded', () => {
         playerNames.black = sgfData.blackName; playerNames.white = sgfData.whiteName;
         playerRanks.black = sgfData.blackRank; playerRanks.white = sgfData.whiteRank;
         komi = sgfData.komi;
-        initGame(false); // This resets gameMoves and currentMoveIndex
-        gameMoves = sgfData.moves.map(m => ({ ...m })); // Repopulate gameMoves
+        initGame(false); 
+        gameMoves = sgfData.moves.map(m => ({ ...m })); 
         if (gameMoves.length > 0) navigateToMove(gameMoves.length - 1);
         else {
-            moveNavigationInfoDiv.textContent = `SGF loaded (Size: ${sgfData.size}). No moves. ${playerNames.black}'s turn.`;
-            statusMessageP.textContent = ''; // Clear SGF parsing errors if any
+            updateMoveNavigationText(); // Ensure text is correct for no moves
+            statusMessageP.textContent = ''; 
         }
         if (!statusMessageP.textContent.startsWith("Error")) statusMessageP.textContent = '';
     }
@@ -312,20 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentMoveIndex = moveIndex;
         currentPlayer = tempCurrentPlayer;
-        if (moveIndex === -1) { // Start of game
-            currentPlayer = 1;
-            moveNavigationInfoDiv.textContent = `Move 0. ${playerNames.black}'s turn.`;
-        } else if (currentMoveIndex === gameMoves.length - 1) { // Last move of game/SGF
-            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
-        } else { // Navigating somewhere in the middle
-            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
-        }
+        updateMoveNavigationText(); // Use centralized function
         statusMessageP.textContent = '';
         updateGameInfo();
         drawBoard();
     }
 
-    gameInfoSaveSgfBtn.addEventListener('click', () => {
+    gameInfoSaveSgfBtn.addEventListener('click', () => { /* ... (no change) ... */ 
         const sgfContent = generateSgfContent();
         if (sgfContent) {
             const blob = new Blob([sgfContent], { type: 'application/x-go-sgf;charset=utf-8' });
@@ -335,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(a.href); // Corrected from url to a.href
+            URL.revokeObjectURL(a.href); 
             const originalNavText = moveNavigationInfoDiv.textContent;
             moveNavigationInfoDiv.textContent = 'SGF file saved.';
             setTimeout(() => moveNavigationInfoDiv.textContent = originalNavText, 2000);
@@ -345,8 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => moveNavigationInfoDiv.textContent = originalNavText, 2000);
         }
     });
-
-    function generateSgfContent() {
+    function generateSgfContent() { /* ... (no change) ... */ 
         if (gameMoves.length === 0 && boardSize === 0) return null;
         let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[ClineGo:1.0]KM[${komi}]SZ[${boardSize}]GN[${gameTitle}]PB[${playerNames.black}]PW[${playerNames.white}]BR[${playerRanks.black}]WR[${playerRanks.white}]DT[${new Date().toISOString().slice(0,10)}]RU[Japanese]`;
         gameMoves.forEach(move => {
@@ -359,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return sgf;
     }
 
-    canvas.addEventListener('mousemove', (event) => {
+    canvas.addEventListener('mousemove', (event) => { /* ... (no change) ... */ 
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
@@ -369,10 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
             drawStone(row, col, currentPlayer, true);
         }
     });
-
     canvas.addEventListener('mouseout', () => drawBoard());
-
-    canvas.addEventListener('click', (event) => {
+    canvas.addEventListener('click', (event) => { /* ... (no change) ... */ 
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
@@ -385,9 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessageP.textContent = '';
 
         if (board[row][col] !== 0) {
-            // This is not a rule violation, just an invalid placement.
-            // No popup, no status message. Silently ignore or provide brief non-error feedback.
-            // For now, let's keep it silent.
+            // Silently ignore or provide brief non-error feedback via moveNavigationInfoDiv if desired
             return;
         }
 
@@ -413,9 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentGroup = getGroup(row, col, tempBoard);
         if (currentGroup.liberties === 0 && capturedStones.length === 0) {
             showBoardPopup('Illegal move, suicide');
-            if (capturedStones.length > 0) { // Revert captures if they were mistakenly added
-                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length;
-                 else blackCaptures -= capturedStones.length;
+            if (capturedStones.length > 0) {
+                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length; else blackCaptures -= capturedStones.length;
             }
             return;
         }
@@ -423,9 +408,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const boardStateString = tempBoard.map(r => r.join('')).join('|');
         if (boardHistory.includes(boardStateString)) {
             showBoardPopup('Ko!');
-            if (capturedStones.length > 0) { // Revert captures
-                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length;
-                 else blackCaptures -= capturedStones.length;
+            if (capturedStones.length > 0) {
+                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length; else blackCaptures -= capturedStones.length;
             }
             return;
         }
@@ -441,19 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPlayer = opponent;
         updateGameInfo();
         drawBoard();
-        
-        // Update move navigation info
-        if (currentMoveIndex === gameMoves.length -1) { // If it's the latest move
-             moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
-        } else { // Should not happen if logic for truncating gameMoves is correct
-            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
-        }
-        if (capturedStones.length > 0) {
+        updateMoveNavigationText(); // Use centralized function
+        if (capturedStones.length > 0) { // Append capture info if any
              moveNavigationInfoDiv.textContent += ` Captured ${capturedStones.length}.`;
         }
     }
 
-    function getNeighbors(r, c) {
+    function getNeighbors(r, c) { /* ... (no change) ... */ 
         const neighbors = [];
         if (r > 0) neighbors.push({ r: r - 1, c: c });
         if (r < boardSize - 1) neighbors.push({ r: r + 1, c: c });
@@ -461,8 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (c < boardSize - 1) neighbors.push({ r: r, c: c + 1 });
         return neighbors;
     }
-
-    function getGroup(r, c, currentBoardState) {
+    function getGroup(r, c, currentBoardState) { /* ... (no change) ... */ 
         const player = currentBoardState[r][c];
         if (player === 0) return { stones: [], liberties: 0 };
         const stones = []; const liberties = new Set();
@@ -482,23 +459,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return { stones, liberties: liberties.size, player };
     }
 
-    window.addEventListener('resize', () => resizeCanvas());
+    // Mobile Navigation Event Listeners
+    mobileNavFirstBtn.addEventListener('click', () => { if (gameMoves.length > 0) navigateToMove(0); });
+    mobileNavPrevBtn.addEventListener('click', () => { if (currentMoveIndex > 0) navigateToMove(currentMoveIndex - 1); else if (currentMoveIndex === 0) navigateToMove(-1);});
+    mobileNavMoveNextBtn.addEventListener('click', () => { if (currentMoveIndex < gameMoves.length - 1) navigateToMove(currentMoveIndex + 1); });
+    mobileNavLastBtn.addEventListener('click', () => { if (gameMoves.length > 0) navigateToMove(gameMoves.length - 1); });
 
+
+    window.addEventListener('resize', () => resizeCanvas());
     document.addEventListener('keydown', (event) => {
-        if (gameMoves.length === 0 && currentMoveIndex === -1) return;
+        if (gameMoves.length === 0 && currentMoveIndex === -1 && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return; // Allow arrows even if no moves for initial nav to -1
         if (event.key === 'ArrowLeft') {
             if (currentMoveIndex > -1) navigateToMove(currentMoveIndex - 1);
+            else if (currentMoveIndex === -1 && gameMoves.length > 0) navigateToMove(-1); // Stay at start
         } else if (event.key === 'ArrowRight') {
             if (currentMoveIndex < gameMoves.length - 1) navigateToMove(currentMoveIndex + 1);
-            else if (currentMoveIndex === gameMoves.length - 1 && gameMoves.length > 0) { // At the last move
-                moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+            else if (currentMoveIndex === gameMoves.length - 1 && gameMoves.length > 0) {
+                 updateMoveNavigationText(); // Refresh text to show "Player's turn"
             }
         }
     });
 
     themeToggleBtn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
-        updateButtonIcons();
+        updateAssetSources(); // Update all asset sources including logos and icons
         updateThemeColorsFromCSS();
         drawBoard();
         localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode');
@@ -507,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark-mode') document.body.classList.add('dark-mode');
     
-    updateButtonIcons();
+    updateAssetSources(); // Initial asset sources
     updateThemeColorsFromCSS();
     initGame(false);
 });
