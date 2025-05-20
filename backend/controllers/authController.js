@@ -97,11 +97,18 @@ exports.loginUser = async (req, res, next) => {
 
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
-// @access  Private (requires auth middleware later)
+// @access  Private
 exports.getMe = async (req, res, next) => {
-  // This route will be protected. For now, let's assume req.user is populated by auth middleware
-  // We will add the auth middleware in a later step.
-  // const user = await User.findById(req.user.id); // Example if req.user.id is set by middleware
-  // res.status(200).json({ success: true, data: user });
-  res.status(200).json({ success: true, message: "getMe route - to be protected" });
+  // req.user is set by the protect middleware
+  if (!req.user) {
+    // This case should ideally be caught by the middleware itself,
+    // but as a safeguard:
+    return res.status(401).json({ success: false, message: 'Not authorized, user data not found in request' });
+  }
+  
+  // The user object (excluding password) is already attached to req.user by the middleware
+  res.status(200).json({
+    success: true,
+    data: req.user 
+  });
 };

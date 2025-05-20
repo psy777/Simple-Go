@@ -5,6 +5,7 @@ const {
   loginUser,
   getMe,
 } = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -18,7 +19,7 @@ router.post('/login', loginUser);
 
 // @desc    Get logged in user
 // @route   GET /api/auth/me
-// @access  Private (to be implemented with middleware)
-router.get('/me', getMe); // We'll add middleware later to protect this
+// @access  Private
+router.get('/me', protect, getMe);
 
 module.exports = router;
