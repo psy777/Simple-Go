@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // API Base URL (for backend)
-    const API_BASE_URL = 'http://localhost:5001/api'; // Adjust if your backend runs elsewhere
+    const API_BASE_URL = 'http://wrengobackend-env-1.eba-dge4uxje.us-east-2.elasticbeanstalk.com/api'; // Adjust if your backend runs elsewhere
 
     // Game State Variables
     let gameTitle = "wrengo"; // Keep lowercase as per user's HTML
