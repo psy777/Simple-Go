@@ -21,17 +21,19 @@
 <body>
     <div class="container">
         <header>
-            <a href="index.html" class="header-logo-link"> <!-- Changed href to index.html -->
-                <img src="assets/light mode mobile wrengo logo.svg" alt="Wrengo Logo" id="mobile-logo-light" class="mobile-logo" style="display: inline-block;"> <!-- Ensure one is visible by default -->
-                <img src="assets/dark mode mobile wrengo logo.svg" alt="Wrengo Logo Dark" id="mobile-logo-dark" class="mobile-logo" style="display:none;">
-                <!-- <h1 id="main-title" class="desktop-title">wrengo</h1> Desktop title removed for now, can be added back with CSS for desktop -->
-            </a>
-            <div class="header-controls-group controls"> <!-- Grouping existing controls -->
-                <button id="new-game-modal-btn" title="New Game"><img src="assets/light mode new game symbol.svg" alt="New Game"></button>
-                <button id="load-sgf-btn" title="Load SGF"><img src="assets/light mode upload button.svg" alt="Load SGF"></button>
-                <input type="file" id="sgf-file-input" accept=".sgf" style="display: none;">
-                <button id="theme-toggle-btn" title="Toggle Theme"><img src="assets/light mode toggle.svg" alt="Toggle Theme"></button>
-                <!-- Placeholder for future core action icons -->
+            <div class="header-left-group"> <!-- New wrapper for logo and controls -->
+                <a href="index.html" class="header-logo-link">
+                    <img src="assets/light mode mobile wrengo logo.svg" alt="Wrengo Logo" id="mobile-logo-light" class="mobile-logo" style="display: inline-block;">
+                    <img src="assets/dark mode mobile wrengo logo.svg" alt="Wrengo Logo Dark" id="mobile-logo-dark" class="mobile-logo" style="display:none;">
+                    <h1 id="main-title" class="desktop-title">wrengo <span class="title-sgf">markdown</span></h1>
+                </a>
+                <div class="header-controls-group controls"> <!-- Grouping existing controls -->
+                    <button id="new-game-modal-btn" title="New Game"><img src="assets/light mode new game symbol.svg" alt="New Game"></button>
+                    <button id="load-sgf-btn" title="Load SGF"><img src="assets/light mode upload button.svg" alt="Load SGF"></button>
+                    <input type="file" id="sgf-file-input" accept=".sgf" style="display: none;">
+                    <button id="theme-toggle-btn" title="Toggle Theme"><img src="assets/light mode toggle.svg" alt="Toggle Theme"></button>
+                    <!-- Placeholder for future core action icons -->
+                </div>
             </div>
             <div class="header-auth-section" id="clerk-auth-section"> <!-- Clerk components will go here -->
                 <div id="app"></div> 

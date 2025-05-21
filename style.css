@@ -55,35 +55,41 @@ body {
 
 header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* This will push .header-left-group and .header-auth-section apart */
     align-items: center;
-    margin-bottom: 20px;
     border-bottom: 1px solid var(--header-border);
-    padding-bottom: 15px;
-    /* Updated header structure styles */
-    display: flex; /* Changed from grid to flex */
-    justify-content: space-between; /* Distributes space: logo left, controls middle, auth right */
+    gap: 10px; 
+    padding-bottom: 10px; 
+    margin-bottom: 10px; 
+}
+
+/* New structure: header > .header-left-group (logo + controls) | .header-auth-section */
+
+.header-left-group {
+    display: flex;
     align-items: center;
-    gap: 10px; /* Adjust gap as needed */
+    gap: 15px; /* Gap between logo/title and controls block */
+    /* margin-right: auto; /* Pushes this group left, and auth group right */
 }
 
 .header-logo-link {
-    display: flex; /* For alignment if text is added back next to logo */
+    display: flex; 
     align-items: center;
-    text-decoration: none; /* Remove underline from link */
+    text-decoration: none; 
+    flex-shrink: 0;
 }
 
-.header-controls-group { /* New class for the middle group of buttons */
+.header-controls-group { /* This is inside header-left-group */
     display: flex;
     align-items: center;
     gap: 8px;
-    /* flex-grow: 1; /* Allows this group to take up remaining space if needed, pushing auth to far right */
-    /* justify-content: center; /* Centers the controls if they don't fill space */
+    /* No flex-grow or margin:auto needed here anymore */
 }
 
-.header-auth-section { /* For the Clerk auth components */
+.header-auth-section { 
     display: flex;
     align-items: center;
+    flex-shrink: 0; 
 }
 
 /* Style for text-based buttons in header (used by Clerk Sign In button) */
@@ -109,15 +115,28 @@ header {
 /* .mobile-logo is now directly inside .header-logo-link */
 .mobile-logo {
     display: inline-block; /* Ensure it's visible */
-    height: 30px; /* Slightly larger for better tap target / visibility */
+    height: 20px; /* Slightly larger for better tap target / visibility */
     width: auto;
     /* margin-right: 10px; /* Only if text is next to it */
 }
-/* .desktop-title { display: block; } */ /* Removed as per instruction for mobile-first logo only */
+.desktop-title { 
+    display: inline-block; /* Show by default for desktop */
+    margin: 0 0 0 8px; /* Remove top/bottom margin, keep left margin for space from logo */
+    color: var(--header-text);
+    font-family: 'Dongle', sans-serif;
+    font-size: 2.2em; /* Further reduced font size for title */
+    font-weight: 400; 
+    line-height: 1; /* Ensure line height doesn't add extra space */
+    vertical-align: middle; /* Helps align with other inline-block/flex items if needed */
+}
+.desktop-title .title-sgf {
+    opacity: 0.6;
+    font-weight: 400; 
+}
 
 
 /* 
-header h1#main-title {
+header h1#main-title { /* This is now part of .desktop-title styling * /
     color: var(--header-text);
     margin: 0;
     font-family: 'Dongle', sans-serif;
@@ -130,7 +149,7 @@ header h1#main-title {
     opacity: 0.6;
     font-weight: 400; 
 }
-*/
+*/ /* Corrected comment block */
 
 .controls {
     display: flex;
@@ -363,31 +382,34 @@ body:not(.dark-mode) .mobile-logo#mobile-logo-dark { display: none; }
 /* Responsive adjustments for Mobile */
 @media (max-width: 768px) {
     header {
-        /* Inherits display: flex; justify-content: space-between; align-items: center; */
-        /* No wrap, items should try to stay in one line */
-        gap: 5px; /* Reduce gap for smaller screens */
+        /* Mobile Visual Order: Logo | Controls | Auth */
+        /* HTML source order is now Logo+Title | Controls | Auth. No 'order' needed. */
+        gap: 5px; /* Reduced gap for mobile */
+    }
+    .header-auth-section {
+        /* order: 3; /* No longer needed */
+        /* flex-shrink: 0; /* Already set in default styles */
     }
     .header-logo-link {
-        /* No specific changes needed, should stay left */
-        flex-shrink: 0; /* Prevent logo from shrinking too much */
+        /* order: 1; /* No longer needed */
+        /* flex-shrink: 0; /* Already set in default styles */
+        /* margin-right: auto; /* Not needed if controls group handles spacing */
+        /* margin-left: 0; /* Not needed */
     }
     .header-controls-group {
-        /* No specific changes needed, should stay in middle */
-        /* flex-grow: 1; /* If you want controls to push auth to far right, but might squeeze logo */
-        justify-content: center; /* Center the buttons within their group */
-        overflow-x: auto; /* Allow scrolling if buttons overflow, rather than wrapping */
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-        scrollbar-width: none; /* Hide scrollbar for Firefox */
+        /* order: 2; /* No longer needed */
+        flex-grow: 0; /* Don't let controls group grow excessively on mobile, rely on its content size */
+        justify-content: center; 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        scrollbar-width: none; 
     }
-    .header-controls-group::-webkit-scrollbar { /* Hide scrollbar for Chrome, Safari, Opera */
+    .header-controls-group::-webkit-scrollbar { 
         display: none;
     }
-
-    .header-auth-section {
-        /* No specific changes needed, should stay right */
-        flex-shrink: 0; /* Prevent auth section from shrinking too much */
+    .desktop-title {
+        display: none; /* Hide "wrengo markdown" text on mobile */
     }
-    /* .header-title-area .desktop-title is already hidden by default by removing it from HTML structure */
 
     /* .controls is .header-controls-group */
     /* .controls button styling is handled by the general .controls button rule */
