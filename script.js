@@ -74,31 +74,42 @@ function mountClerkComponents(clerk) { // Accept clerk instance as argument
 
     if (clerk.user) {
         const userButtonDiv = document.createElement('div');
+        // userButtonDiv.id = 'user-button-clerk'; // Optional: if you need to target it with CSS
         appDiv.appendChild(userButtonDiv);
-        clerk.mountUserButton(userButtonDiv);
+        clerk.mountUserButton(userButtonDiv, {
+            appearance: {
+                elements: {
+                    userButtonAvatarBox: "clerk-avatar-box", // Example: add custom class
+                    userButtonPopoverCard: "clerk-popover-card"
+                }
+            }
+        });
     } else {
+        // User is signed out, mount the full SignIn component directly as per Clerk docs for <SignIn />
         const signInDiv = document.createElement('div');
+        // signInDiv.id = 'clerk-sign-in-component'; // Optional ID for styling the container
         appDiv.appendChild(signInDiv);
         clerk.mountSignIn(signInDiv, {
             // You can pass options to customize the sign-in component
-            // e.g., appearance: { elements: { card: 'custom-card-class' } }
+            // e.g., appearance: { baseTheme: 'dark' }
             // redirectUrl: './', // Where to redirect after sign-in/sign-up
         });
     }
 
     // Add a listener for session events to re-render components if auth state changes
-    // This is important if the user signs in/out in another tab, or session expires.
     clerk.addListener(({ user }) => {
         console.log("Clerk listener triggered. User:", user);
         appDiv.innerHTML = ''; // Clear previous content
         if (user) {
             const userButtonDiv = document.createElement('div');
             appDiv.appendChild(userButtonDiv);
-            clerk.mountUserButton(userButtonDiv);
+            clerk.mountUserButton(userButtonDiv, {
+                 appearance: { elements: { userButtonAvatarBox: "clerk-avatar-box" } }
+            });
         } else {
             const signInDiv = document.createElement('div');
             appDiv.appendChild(signInDiv);
-            clerk.mountSignIn(signInDiv);
+            clerk.mountSignIn(signInDiv); // Mount the full SignIn component
         }
     });
 }
