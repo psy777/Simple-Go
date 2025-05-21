@@ -1,49 +1,108 @@
-// Clerk Publishable Key - REPLACE WITH YOUR ACTUAL KEY
-const CLERK_PUBLISHABLE_KEY = 'pk_test_Y2VydGFpbi1nb2JibGVyLTg5LmNsZXJrLmFjY291bnRzLmRldiQ';
+// Note: CLERK_PUBLISHABLE_KEY is now set directly in the script tag in index.html
+// via data-clerk-publishable-key attribute.
+// The Clerk SDK will pick it up automatically.
 
-window.startClerk = async () => {
-    const Clerk = window.Clerk; // Access Clerk from the global scope (loaded by the script tag)
-    if (!Clerk) {
-        console.error('ClerkJS not loaded');
+window.addEventListener('load', async function () {
+    const Clerk = window.Clerk; // Clerk SDK should be loaded on the window object
+    if (!Clerk || !Clerk.load) { // Check if Clerk and its load method are available
+        console.error('Clerk SDK not loaded or not ready.');
+        // Attempt to initialize Clerk if the instance is available but not its methods
+        if (typeof Clerk === 'function' && !Clerk.isReady()) {
+            try {
+                const clerkInstance = new Clerk(document.querySelector('script[data-clerk-publishable-key]').dataset.clerkPublishableKey);
+                await clerkInstance.load();
+                mountClerkComponents(clerkInstance);
+            } catch (e) {
+                console.error('Failed to manually initialize Clerk:', e);
+            }
+        }
+        return;
+    }
+    
+    // The Clerk instance is often available directly on window.Clerk after the script loads
+    // and its load method might have already been called or is implicitly handled by the SDK.
+    // If Clerk.load() is a function, it's usually for explicit re-initialization or options.
+    // For the vanilla JS setup via script tag, Clerk often auto-initializes.
+    // We need to ensure we have the Clerk instance.
+    
+    let clerkInstance = Clerk; // Assuming Clerk on window is the instance or has instance methods
+
+    // If Clerk on window is a class constructor (like `class Clerk {...}`), instantiate it.
+    // The script tag method usually makes `window.Clerk` the ready-to-use instance.
+    // We'll check if `clerkInstance.load` exists and is a function. If not, it might be the class.
+    if (typeof clerkInstance.load !== 'function' && typeof Clerk === 'function') {
+        try {
+            const publishableKey = document.querySelector('script[data-clerk-publishable-key]').dataset.clerkPublishableKey;
+            if (!publishableKey) {
+                console.error("Clerk Publishable Key not found in script tag.");
+                return;
+            }
+            clerkInstance = new Clerk(publishableKey);
+        } catch (e) {
+            console.error("Error instantiating Clerk:", e);
+            return;
+        }
+    }
+
+    try {
+        if (typeof clerkInstance.load === 'function' && (!clerkInstance.isReady || !clerkInstance.isReady())) {
+             await clerkInstance.load();
+        } else if (!clerkInstance.isReady || !clerkInstance.isReady()){
+            // If .load isn't there but isReady suggests it's not loaded, this is an issue.
+            console.warn("Clerk instance found but might not be fully loaded, and no .load() method available to call.");
+        }
+        // At this point, Clerk should be loaded if the script tag worked.
+        // The Clerk object on window should be the initialized instance.
+        mountClerkComponents(clerkInstance); // Pass the instance
+    } catch (error) {
+        console.error("Error loading Clerk:", error);
+    }
+});
+
+function mountClerkComponents(clerk) { // Accept clerk instance as argument
+    if (!clerk) {
+        console.error("Clerk instance not available for mounting components.");
+        return;
+    }
+    const appDiv = document.getElementById('app');
+    if (!appDiv) {
+        console.error('#app div not found for Clerk components.');
         return;
     }
 
-    const clerk = new Clerk(CLERK_PUBLISHABLE_KEY);
-    await clerk.load();
-
-    const clerkComponentsDiv = document.getElementById('clerk-components');
-    if (!clerkComponentsDiv) {
-        console.error('#clerk-components div not found for mounting Clerk elements.');
-        return;
-    }
+    appDiv.innerHTML = ''; // Clear previous content
 
     if (clerk.user) {
-        // User is signed in, mount UserButton
-        clerk.mountUserButton(clerkComponentsDiv);
+        const userButtonDiv = document.createElement('div');
+        appDiv.appendChild(userButtonDiv);
+        clerk.mountUserButton(userButtonDiv);
     } else {
-        // User is signed out, mount SignInButton or SignIn component
-        // For simplicity, let's mount a sign-in button that opens Clerk's modal
-        const signInButton = document.createElement('button');
-        signInButton.classList.add('text-button'); // Use existing class for styling
-        signInButton.textContent = 'Sign In / Sign Up';
-        signInButton.addEventListener('click', () => clerk.openSignIn({}));
-        clerkComponentsDiv.appendChild(signInButton);
+        const signInDiv = document.createElement('div');
+        appDiv.appendChild(signInDiv);
+        clerk.mountSignIn(signInDiv, {
+            // You can pass options to customize the sign-in component
+            // e.g., appearance: { elements: { card: 'custom-card-class' } }
+            // redirectUrl: './', // Where to redirect after sign-in/sign-up
+        });
     }
 
-    // Listen for session changes to update UI (e.g., after login/logout from Clerk's UI)
+    // Add a listener for session events to re-render components if auth state changes
+    // This is important if the user signs in/out in another tab, or session expires.
     clerk.addListener(({ user }) => {
-        clerkComponentsDiv.innerHTML = ''; // Clear previous components
+        console.log("Clerk listener triggered. User:", user);
+        appDiv.innerHTML = ''; // Clear previous content
         if (user) {
-            clerk.mountUserButton(clerkComponentsDiv);
+            const userButtonDiv = document.createElement('div');
+            appDiv.appendChild(userButtonDiv);
+            clerk.mountUserButton(userButtonDiv);
         } else {
-            const signInButton = document.createElement('button');
-            signInButton.classList.add('text-button');
-            signInButton.textContent = 'Sign In / Sign Up';
-            signInButton.addEventListener('click', () => clerk.openSignIn({}));
-            clerkComponentsDiv.appendChild(signInButton);
+            const signInDiv = document.createElement('div');
+            appDiv.appendChild(signInDiv);
+            clerk.mountSignIn(signInDiv);
         }
     });
-};
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('go-board-canvas');

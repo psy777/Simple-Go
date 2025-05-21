@@ -9,18 +9,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- ClerkJS SDK - Replace with your actual script from Clerk Dashboard if different -->
-    <script type="text/javascript"
-        src="https://cdn.clerk.dev/clerk.browser.js" 
+    <!-- ClerkJS SDK - Ensure your publishable key is correct -->
+    <script
         async
-        onload="window.startClerk()"> 
-    </script>
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_Y2VydGFpbi1nb2JibGVyLTg5LmNsZXJrLmFjY291bnRzLmRldiQ" 
+        src="https://certain-gobbler-89.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+        type="text/javascript"
+    ></script>
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-left" id="clerk-auth-section">
-                <div id="clerk-components"></div> <!-- Div for Clerk to mount components -->
+                <div id="app"></div> <!-- Target for Clerk components as per their guide -->
             </div>
             <div class="header-center header-title-area">
                 <img src="assets/light mode mobile wrengo logo.svg" alt="Wrengo Logo" id="mobile-logo-light" class="mobile-logo">
