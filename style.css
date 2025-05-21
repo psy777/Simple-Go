@@ -60,24 +60,33 @@ header {
     margin-bottom: 20px;
     border-bottom: 1px solid var(--header-border);
     padding-bottom: 15px;
-    /* New header structure styles */
-    display: grid;
-    grid-template-columns: auto 1fr auto; /* Left, Center (flexible), Right */
-    gap: 15px; /* Gap between sections */
+    /* Updated header structure styles */
+    display: flex; /* Changed from grid to flex */
+    justify-content: space-between; /* Distributes space: logo left, controls middle, auth right */
+    align-items: center;
+    gap: 10px; /* Adjust gap as needed */
 }
 
-.header-left, .header-right {
+.header-logo-link {
+    display: flex; /* For alignment if text is added back next to logo */
+    align-items: center;
+    text-decoration: none; /* Remove underline from link */
+}
+
+.header-controls-group { /* New class for the middle group of buttons */
     display: flex;
     align-items: center;
     gap: 8px;
-}
-.header-center { /* This is the existing header-title-area */
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Center the logo/title area */
+    /* flex-grow: 1; /* Allows this group to take up remaining space if needed, pushing auth to far right */
+    /* justify-content: center; /* Centers the controls if they don't fill space */
 }
 
-/* Style for text-based buttons in header */
+.header-auth-section { /* For the Clerk auth components */
+    display: flex;
+    align-items: center;
+}
+
+/* Style for text-based buttons in header (used by Clerk Sign In button) */
 .text-button {
     background: none;
     border: none;
@@ -91,31 +100,28 @@ header {
     background-color: var(--button-hover-bg);
 }
 
-#user-greeting span {
+#user-greeting span { /* This was for the old auth, can be removed or repurposed if Clerk provides similar */
     margin-right: 8px;
     font-size: 0.9em;
 }
 
-
-.header-title-area { /* Retaining for specificity if needed, but header-center is primary now */
-    display: flex;
-    align-items: center;
-}
-
+/* .header-title-area is no longer a primary layout element, .header-logo-link handles logo */
+/* .mobile-logo is now directly inside .header-logo-link */
 .mobile-logo {
-    display: none; 
-    height: 25px; 
+    display: inline-block; /* Ensure it's visible */
+    height: 30px; /* Slightly larger for better tap target / visibility */
     width: auto;
-    margin-right: 10px; /* Space if title is also shown, or if it's the only thing */
+    /* margin-right: 10px; /* Only if text is next to it */
 }
-.desktop-title { display: block; }
+/* .desktop-title { display: block; } */ /* Removed as per instruction for mobile-first logo only */
 
 
+/* 
 header h1#main-title {
     color: var(--header-text);
     margin: 0;
     font-family: 'Dongle', sans-serif;
-    font-size: 3.2em; /* Adjusted Dongle size */
+    font-size: 3.2em; 
     font-weight: 400; 
     line-height: 1; 
 }
@@ -124,6 +130,7 @@ header h1#main-title {
     opacity: 0.6;
     font-weight: 400; 
 }
+*/
 
 .controls {
     display: flex;
@@ -131,10 +138,10 @@ header h1#main-title {
     gap: 8px; /* Slightly reduced gap */
 }
 
-.controls button {
-    padding: 5px; /* Reduced padding for icon buttons */
+.controls button { /* This now targets buttons within .header-controls-group */
+    padding: 8px; /* Adjust padding to help make it square with icon */
     border: 1px solid var(--button-border);
-    border-radius: 5px;
+    border-radius: 5px; /* Keep slightly rounded corners */
     background-color: var(--button-bg);
     color: var(--text-color); 
     cursor: pointer;
@@ -142,10 +149,11 @@ header h1#main-title {
     display: flex; 
     align-items: center;
     justify-content: center;
-    width: 36px; /* Fixed width for icon buttons */
-    height: 36px; /* Fixed height for icon buttons */
+    width: 38px; /* Aim for square, adjust with padding */
+    height: 38px; /* Aim for square, adjust with padding */
+    box-sizing: border-box; /* Include padding and border in width/height */
 }
-.controls button img {
+.controls button img { /* This now targets icons within .header-controls-group buttons */
     height: var(--icon-size);
     width: var(--icon-size);
     filter: var(--svg-icon-filter, none); /* For theme-based icon color changes if needed */
@@ -355,27 +363,35 @@ body:not(.dark-mode) .mobile-logo#mobile-logo-dark { display: none; }
 /* Responsive adjustments for Mobile */
 @media (max-width: 768px) {
     header {
-        /* Adjust grid for mobile if needed, or let items wrap naturally */
-        grid-template-columns: 1fr; /* Stack header sections on mobile */
-        justify-items: center; /* Center items within the grid cell */
+        /* Inherits display: flex; justify-content: space-between; align-items: center; */
+        /* No wrap, items should try to stay in one line */
+        gap: 5px; /* Reduce gap for smaller screens */
     }
-    .header-left, .header-center, .header-right {
-        justify-content: center; /* Center content within each header section on mobile */
-        width: 100%; /* Allow sections to take full width if they stack */
+    .header-logo-link {
+        /* No specific changes needed, should stay left */
+        flex-shrink: 0; /* Prevent logo from shrinking too much */
     }
-    .header-title-area .desktop-title { display: none; } 
-    /* .header-title-area .mobile-logo is handled by dark/light mode specific rules now */
+    .header-controls-group {
+        /* No specific changes needed, should stay in middle */
+        /* flex-grow: 1; /* If you want controls to push auth to far right, but might squeeze logo */
+        justify-content: center; /* Center the buttons within their group */
+        overflow-x: auto; /* Allow scrolling if buttons overflow, rather than wrapping */
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
+    }
+    .header-controls-group::-webkit-scrollbar { /* Hide scrollbar for Chrome, Safari, Opera */
+        display: none;
+    }
 
-    .controls { /* This is now .header-right */
-        flex-direction: row; 
-        justify-content: center; 
-        flex-wrap: wrap; 
-        width: 100%;
+    .header-auth-section {
+        /* No specific changes needed, should stay right */
+        flex-shrink: 0; /* Prevent auth section from shrinking too much */
     }
-    .controls button { /* This is now .header-right button */
-        flex-grow: 1; 
-        max-width: 100px; 
-    }
+    /* .header-title-area .desktop-title is already hidden by default by removing it from HTML structure */
+
+    /* .controls is .header-controls-group */
+    /* .controls button styling is handled by the general .controls button rule */
+
     main {
         flex-direction: column;
         align-items: center; 
