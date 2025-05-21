@@ -1,3 +1,50 @@
+// Clerk Publishable Key - REPLACE WITH YOUR ACTUAL KEY
+const CLERK_PUBLISHABLE_KEY = 'pk_test_Y2VydGFpbi1nb2JibGVyLTg5LmNsZXJrLmFjY291bnRzLmRldiQ';
+
+window.startClerk = async () => {
+    const Clerk = window.Clerk; // Access Clerk from the global scope (loaded by the script tag)
+    if (!Clerk) {
+        console.error('ClerkJS not loaded');
+        return;
+    }
+
+    const clerk = new Clerk(CLERK_PUBLISHABLE_KEY);
+    await clerk.load();
+
+    const clerkComponentsDiv = document.getElementById('clerk-components');
+    if (!clerkComponentsDiv) {
+        console.error('#clerk-components div not found for mounting Clerk elements.');
+        return;
+    }
+
+    if (clerk.user) {
+        // User is signed in, mount UserButton
+        clerk.mountUserButton(clerkComponentsDiv);
+    } else {
+        // User is signed out, mount SignInButton or SignIn component
+        // For simplicity, let's mount a sign-in button that opens Clerk's modal
+        const signInButton = document.createElement('button');
+        signInButton.classList.add('text-button'); // Use existing class for styling
+        signInButton.textContent = 'Sign In / Sign Up';
+        signInButton.addEventListener('click', () => clerk.openSignIn({}));
+        clerkComponentsDiv.appendChild(signInButton);
+    }
+
+    // Listen for session changes to update UI (e.g., after login/logout from Clerk's UI)
+    clerk.addListener(({ user }) => {
+        clerkComponentsDiv.innerHTML = ''; // Clear previous components
+        if (user) {
+            clerk.mountUserButton(clerkComponentsDiv);
+        } else {
+            const signInButton = document.createElement('button');
+            signInButton.classList.add('text-button');
+            signInButton.textContent = 'Sign In / Sign Up';
+            signInButton.addEventListener('click', () => clerk.openSignIn({}));
+            clerkComponentsDiv.appendChild(signInButton);
+        }
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('go-board-canvas');
     const ctx = canvas.getContext('2d');
@@ -41,26 +88,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalWhiteRankInput = document.getElementById('modal-white-rank');
     const modalKomiInput = document.getElementById('modal-komi');
 
-    // Auth Modal Elements
-    const loginModalBtn = document.getElementById('login-modal-btn');
-    const registerModalBtn = document.getElementById('register-modal-btn');
-    const loginModal = document.getElementById('login-modal');
-    const registerModal = document.getElementById('register-modal');
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    const logoutBtn = document.getElementById('logout-btn');
-    const authLinksDiv = document.getElementById('auth-links');
-    const userGreetingDiv = document.getElementById('user-greeting');
-    const usernameDisplaySpan = document.getElementById('username-display');
-    const loginErrorMessageP = document.getElementById('login-error-message');
-    const registerErrorMessageP = document.getElementById('register-error-message');
+    // Auth Modal Elements - To be removed or repurposed for Clerk
+    // const loginModalBtn = document.getElementById('login-modal-btn');
+    // const registerModalBtn = document.getElementById('register-modal-btn');
+    // const loginModal = document.getElementById('login-modal');
+    // const registerModal = document.getElementById('register-modal');
+    // const loginForm = document.getElementById('login-form');
+    // const registerForm = document.getElementById('register-form');
+    // const logoutBtn = document.getElementById('logout-btn');
+    // const authLinksDiv = document.getElementById('auth-links');
+    // const userGreetingDiv = document.getElementById('user-greeting');
+    // const usernameDisplaySpan = document.getElementById('username-display');
+    // const loginErrorMessageP = document.getElementById('login-error-message');
+    // const registerErrorMessageP = document.getElementById('register-error-message');
 
-    // General Modal Close Buttons (using data attribute)
+    // General Modal Close Buttons (using data attribute) - Keep for New Game Modal
     const allCloseModalBtns = document.querySelectorAll('.close-modal-btn');
 
 
-    // API Base URL (for backend)
-    const API_BASE_URL = 'http://wrengobackend-env-1.eba-dge4uxje.us-east-2.elasticbeanstalk.com/api'; // Adjust if your backend runs elsewhere
+    // API Base URL (for backend) - This will still be used for SGFs, Problems etc.
+    const API_BASE_URL = 'https://wrengobackend-env-1.eba-dge4uxje.us-east-2.elasticbeanstalk.com/api'; // Adjust if your backend runs elsewhere
 
     // Game State Variables
     let gameTitle = "wrengo"; // Keep lowercase as per user's HTML
@@ -233,20 +280,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     newGameModalBtn.addEventListener('click', () => openModal(newGameModal));
-    if (loginModalBtn) loginModalBtn.addEventListener('click', () => openModal(loginModal));
-    if (registerModalBtn) registerModalBtn.addEventListener('click', () => openModal(registerModal));
+    // Removed event listeners for old login/register modal buttons
 
     allCloseModalBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const modalId = btn.dataset.modalId;
             if (modalId) {
                 const modalToClose = document.getElementById(modalId);
-                closeModal(modalToClose);
+                if (modalToClose) closeModal(modalToClose); // Check if modalToClose exists
             }
         });
     });
     
-    startGameBtn.addEventListener('click', () => { initGame(true); closeModal(newGameModal); });
+    if (startGameBtn) startGameBtn.addEventListener('click', () => { initGame(true); closeModal(newGameModal); });
+
 
     // Close modal if clicked outside of modal-content
     window.addEventListener('click', (event) => {
@@ -255,118 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Authentication Logic ---
-    async function handleRegister(event) {
-        event.preventDefault();
-        registerErrorMessageP.textContent = '';
-        registerErrorMessageP.style.display = 'none';
-        const username = document.getElementById('register-username').value;
-        const email = document.getElementById('register-email').value;
-        const password = document.getElementById('register-password').value;
+    // --- Authentication Logic (To be replaced by Clerk) ---
+    // function handleRegister(event) { ... } // Removed
+    // async function handleLogin(event) { ... } // Removed
+    // function handleLogout() { ... } // Removed
+    // function updateAuthUI(isLoggedIn, userData = null) { ... } // Removed
+    // async function checkInitialAuthState() { ... } // Removed
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password }),
-            });
-            const data = await response.json();
-            if (data.success) {
-                localStorage.setItem('authToken', data.token);
-                updateAuthUI(true, data.user);
-                closeModal(registerModal);
-                registerForm.reset();
-            } else {
-                registerErrorMessageP.textContent = data.message || 'Registration failed.';
-                registerErrorMessageP.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Registration error:', error);
-            registerErrorMessageP.textContent = 'An error occurred. Please try again.';
-            registerErrorMessageP.style.display = 'block';
-        }
-    }
-
-    async function handleLogin(event) {
-        event.preventDefault();
-        loginErrorMessageP.textContent = '';
-        loginErrorMessageP.style.display = 'none';
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-            const data = await response.json();
-            if (data.success) {
-                localStorage.setItem('authToken', data.token);
-                updateAuthUI(true, data.user);
-                closeModal(loginModal);
-                loginForm.reset();
-            } else {
-                loginErrorMessageP.textContent = data.message || 'Login failed.';
-                loginErrorMessageP.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            loginErrorMessageP.textContent = 'An error occurred. Please try again.';
-            loginErrorMessageP.style.display = 'block';
-        }
-    }
-
-    function handleLogout() {
-        localStorage.removeItem('authToken');
-        updateAuthUI(false);
-        // Potentially redirect or refresh parts of the UI as needed
-    }
-
-    function updateAuthUI(isLoggedIn, userData = null) {
-        if (isLoggedIn && authLinksDiv && userGreetingDiv && usernameDisplaySpan) {
-            authLinksDiv.style.display = 'none';
-            userGreetingDiv.style.display = 'flex';
-            usernameDisplaySpan.textContent = `Hi, ${userData?.username || 'User'}!`;
-        } else if (authLinksDiv && userGreetingDiv) {
-            authLinksDiv.style.display = 'flex';
-            userGreetingDiv.style.display = 'none';
-            if(usernameDisplaySpan) usernameDisplaySpan.textContent = '';
-        }
-    }
-    
-    async function checkInitialAuthState() {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/auth/me`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                const data = await response.json();
-                if (data.success && data.data) {
-                    updateAuthUI(true, data.data);
-                } else {
-                    // Token might be invalid or expired
-                    localStorage.removeItem('authToken');
-                    updateAuthUI(false);
-                }
-            } catch (error) {
-                console.error('Error verifying token:', error);
-                localStorage.removeItem('authToken');
-                updateAuthUI(false);
-            }
-        } else {
-            updateAuthUI(false);
-        }
-    }
-
-    if (loginForm) loginForm.addEventListener('submit', handleLogin);
-    if (registerForm) registerForm.addEventListener('submit', handleRegister);
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+    // Removed event listeners for old login/register forms and logout button
 
 
     loadSgfBtn.addEventListener('click', () => sgfFileInput.click());
@@ -655,6 +598,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateAssetSources(); // Initial asset sources
     updateThemeColorsFromCSS();
-    checkInitialAuthState(); // Check auth state when page loads
+    // checkInitialAuthState(); // Clerk will handle its own auth state
     initGame(false);
 });

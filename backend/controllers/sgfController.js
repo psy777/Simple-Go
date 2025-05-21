@@ -6,7 +6,8 @@ const User = require('../models/User'); // May not be strictly needed here if al
 // @access  Private
 exports.getSgfs = async (req, res, next) => {
   try {
-    const sgfs = await Sgf.find({ user: req.user.id }).sort({ lastModifiedAt: -1 }); // Sort by most recently modified
+    // Clerk provides userId on req.auth.userId after successful authentication
+    const sgfs = await Sgf.find({ user: req.auth.userId }).sort({ lastModifiedAt: -1 }); // Sort by most recently modified
     res.status(200).json({
       success: true,
       count: sgfs.length,
@@ -30,7 +31,7 @@ exports.getSgfById = async (req, res, next) => {
     }
 
     // Ensure user owns the SGF
-    if (sgf.user.toString() !== req.user.id) {
+    if (sgf.user.toString() !== req.auth.userId) {
       return res.status(401).json({ success: false, message: 'Not authorized to access this SGF' });
     }
 
@@ -59,7 +60,7 @@ exports.createSgf = async (req, res, next) => {
 
   try {
     const newSgf = await Sgf.create({
-      user: req.user.id,
+      user: req.auth.userId, // Use Clerk's userId
       title,
       sgfContent,
       description, // Optional
@@ -89,7 +90,7 @@ exports.updateSgf = async (req, res, next) => {
     }
 
     // Ensure user owns the SGF
-    if (sgf.user.toString() !== req.user.id) {
+    if (sgf.user.toString() !== req.auth.userId) {
       return res.status(401).json({ success: false, message: 'Not authorized to update this SGF' });
     }
 
@@ -127,7 +128,7 @@ exports.deleteSgf = async (req, res, next) => {
     }
 
     // Ensure user owns the SGF
-    if (sgf.user.toString() !== req.user.id) {
+    if (sgf.user.toString() !== req.auth.userId) {
       return res.status(401).json({ success: false, message: 'Not authorized to delete this SGF' });
     }
 

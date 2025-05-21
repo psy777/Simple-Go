@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
 });
 
 // Mount routers
-app.use('/api/auth', require('./routes/auth'));
+// app.use('/api/auth', require('./routes/auth')); // Removed old auth routes
 app.use('/api/sgfs', require('./routes/sgfRoutes'));
 
 const PORT = process.env.PORT || 5001;

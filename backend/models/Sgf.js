@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const SgfSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
+  user: { // This will store Clerk's userId
+    type: String,
     required: true,
-    ref: 'User', // Reference to the User model
+    index: true, // Good to index if you query SGFs by user
   },
   title: {
     type: String,

@@ -9,19 +9,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- ClerkJS SDK - Replace with your actual script from Clerk Dashboard if different -->
+    <script type="text/javascript"
+        src="https://cdn.clerk.dev/clerk.browser.js" 
+        async
+        onload="window.startClerk()"> 
+    </script>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="header-left">
-                <div id="auth-links">
-                    <button id="login-modal-btn" class="text-button">Login</button>
-                    <button id="register-modal-btn" class="text-button">Register</button>
-                </div>
-                <div id="user-greeting" style="display: none;">
-                    <span id="username-display"></span>
-                    <button id="logout-btn" class="text-button">Logout</button>
-                </div>
+            <div class="header-left" id="clerk-auth-section">
+                <div id="clerk-components"></div> <!-- Div for Clerk to mount components -->
             </div>
             <div class="header-center header-title-area">
                 <img src="assets/light mode mobile wrengo logo.svg" alt="Wrengo Logo" id="mobile-logo-light" class="mobile-logo">
@@ -118,49 +117,7 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close-modal-btn" data-modal-id="login-modal">&times;</span>
-            <h2>Login</h2>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="login-email">Email:</label>
-                    <input type="email" id="login-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password:</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit" id="login-submit-btn">Login</button>
-                <p id="login-error-message" class="error-message" style="display: none;"></p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Register Modal -->
-    <div id="register-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close-modal-btn" data-modal-id="register-modal">&times;</span>
-            <h2>Register</h2>
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="register-username">Username:</label>
-                    <input type="text" id="register-username" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-email">Email:</label>
-                    <input type="email" id="register-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Password (min. 6 characters):</label>
-                    <input type="password" id="register-password" minlength="6" required>
-                </div>
-                <button type="submit" id="register-submit-btn">Register</button>
-                <p id="register-error-message" class="error-message" style="display: none;"></p>
-            </form>
-        </div>
-    </div>
+    <!-- Login and Register Modals are removed, will be handled by Clerk -->
 
     <script src="script.js"></script>
 </body>
