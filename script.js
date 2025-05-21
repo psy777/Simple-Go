@@ -85,15 +85,14 @@ function mountClerkComponents(clerk) { // Accept clerk instance as argument
             }
         });
     } else {
-        // User is signed out, mount the full SignIn component directly as per Clerk docs for <SignIn />
-        const signInDiv = document.createElement('div');
-        // signInDiv.id = 'clerk-sign-in-component'; // Optional ID for styling the container
-        appDiv.appendChild(signInDiv);
-        clerk.mountSignIn(signInDiv, {
-            // You can pass options to customize the sign-in component
-            // e.g., appearance: { baseTheme: 'dark' }
-            // redirectUrl: './', // Where to redirect after sign-in/sign-up
+        // User is signed out, create a "Login" button that opens Clerk's Sign In modal
+        const loginButton = document.createElement('button');
+        loginButton.classList.add('text-button'); // Use existing class for styling
+        loginButton.textContent = 'Login'; // Or 'Sign In / Sign Up'
+        loginButton.addEventListener('click', () => {
+            clerk.openSignIn({}); // This opens Clerk's UI as a modal
         });
+        appDiv.appendChild(loginButton);
     }
 
     // Add a listener for session events to re-render components if auth state changes
@@ -107,9 +106,11 @@ function mountClerkComponents(clerk) { // Accept clerk instance as argument
                  appearance: { elements: { userButtonAvatarBox: "clerk-avatar-box" } }
             });
         } else {
-            const signInDiv = document.createElement('div');
-            appDiv.appendChild(signInDiv);
-            clerk.mountSignIn(signInDiv); // Mount the full SignIn component
+            const loginButton = document.createElement('button');
+            loginButton.classList.add('text-button');
+            loginButton.textContent = 'Login'; // Or 'Sign In / Sign Up'
+            loginButton.addEventListener('click', () => clerk.openSignIn({}));
+            appDiv.appendChild(loginButton);
         }
     });
 }
