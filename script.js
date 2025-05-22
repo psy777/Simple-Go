@@ -19,17 +19,8 @@ window.addEventListener('load', async function () {
         return;
     }
     
-    // The Clerk instance is often available directly on window.Clerk after the script loads
-    // and its load method might have already been called or is implicitly handled by the SDK.
-    // If Clerk.load() is a function, it's usually for explicit re-initialization or options.
-    // For the vanilla JS setup via script tag, Clerk often auto-initializes.
-    // We need to ensure we have the Clerk instance.
-    
-    let clerkInstance = Clerk; // Assuming Clerk on window is the instance or has instance methods
+    let clerkInstance = Clerk; 
 
-    // If Clerk on window is a class constructor (like `class Clerk {...}`), instantiate it.
-    // The script tag method usually makes `window.Clerk` the ready-to-use instance.
-    // We'll check if `clerkInstance.load` exists and is a function. If not, it might be the class.
     if (typeof clerkInstance.load !== 'function' && typeof Clerk === 'function') {
         try {
             const publishableKey = document.querySelector('script[data-clerk-publishable-key]').dataset.clerkPublishableKey;
@@ -48,18 +39,15 @@ window.addEventListener('load', async function () {
         if (typeof clerkInstance.load === 'function' && (!clerkInstance.isReady || !clerkInstance.isReady())) {
              await clerkInstance.load();
         } else if (!clerkInstance.isReady || !clerkInstance.isReady()){
-            // If .load isn't there but isReady suggests it's not loaded, this is an issue.
             console.warn("Clerk instance found but might not be fully loaded, and no .load() method available to call.");
         }
-        // At this point, Clerk should be loaded if the script tag worked.
-        // The Clerk object on window should be the initialized instance.
-        mountClerkComponents(clerkInstance); // Pass the instance
+        mountClerkComponents(clerkInstance); 
     } catch (error) {
         console.error("Error loading Clerk:", error);
     }
 });
 
-function mountClerkComponents(clerk) { // Accept clerk instance as argument
+function mountClerkComponents(clerk) { 
     if (!clerk) {
         console.error("Clerk instance not available for mounting components.");
         return;
@@ -70,35 +58,32 @@ function mountClerkComponents(clerk) { // Accept clerk instance as argument
         return;
     }
 
-    appDiv.innerHTML = ''; // Clear previous content
+    appDiv.innerHTML = ''; 
 
     if (clerk.user) {
         const userButtonDiv = document.createElement('div');
-        // userButtonDiv.id = 'user-button-clerk'; // Optional: if you need to target it with CSS
         appDiv.appendChild(userButtonDiv);
         clerk.mountUserButton(userButtonDiv, {
             appearance: {
                 elements: {
-                    userButtonAvatarBox: "clerk-avatar-box", // Example: add custom class
+                    userButtonAvatarBox: "clerk-avatar-box", 
                     userButtonPopoverCard: "clerk-popover-card"
                 }
             }
         });
     } else {
-        // User is signed out, create a "Login" button that opens Clerk's Sign In modal
         const loginButton = document.createElement('button');
-        loginButton.classList.add('text-button'); // Use existing class for styling
-        loginButton.textContent = 'Login'; // Or 'Sign In / Sign Up'
+        loginButton.classList.add('text-button'); 
+        loginButton.textContent = 'Login'; 
         loginButton.addEventListener('click', () => {
-            clerk.openSignIn({}); // This opens Clerk's UI as a modal
+            clerk.openSignIn({}); 
         });
         appDiv.appendChild(loginButton);
     }
 
-    // Add a listener for session events to re-render components if auth state changes
     clerk.addListener(({ user }) => {
         console.log("Clerk listener triggered. User:", user);
-        appDiv.innerHTML = ''; // Clear previous content
+        appDiv.innerHTML = ''; 
         if (user) {
             const userButtonDiv = document.createElement('div');
             appDiv.appendChild(userButtonDiv);
@@ -108,7 +93,7 @@ function mountClerkComponents(clerk) { // Accept clerk instance as argument
         } else {
             const loginButton = document.createElement('button');
             loginButton.classList.add('text-button');
-            loginButton.textContent = 'Login'; // Or 'Sign In / Sign Up'
+            loginButton.textContent = 'Login'; 
             loginButton.addEventListener('click', () => clerk.openSignIn({}));
             appDiv.appendChild(loginButton);
         }
@@ -120,13 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('go-board-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Main Controls
     const newGameModalBtn = document.getElementById('new-game-modal-btn');
     const loadSgfBtn = document.getElementById('load-sgf-btn');
     const sgfFileInput = document.getElementById('sgf-file-input');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
-    // Game Info Display
     const blackPlayerNameDisplay = document.querySelector('#player-info-black .player-name');
     const blackCapturesSpan = document.getElementById('black-captures');
     const whitePlayerNameDisplay = document.querySelector('#player-info-white .player-name');
@@ -135,21 +118,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const moveNavigationInfoDiv = document.getElementById('move-navigation-info');
     const gameInfoSaveSgfBtn = document.querySelector('#game-info-footer #save-sgf-btn');
 
-    // On-board Popup
     const boardPopupMessageDiv = document.getElementById('board-popup-message');
 
-    // Mobile Navigation
-    const mobileNavControls = document.getElementById('mobile-nav-controls');
     const mobileNavFirstBtn = document.getElementById('mobile-nav-first');
     const mobileNavPrevBtn = document.getElementById('mobile-nav-prev');
-    const mobileNavMoveNextBtn = document.getElementById('mobile-nav-next'); // This is the "Next" button
+    const mobileNavMoveNextBtn = document.getElementById('mobile-nav-next'); 
     const mobileNavLastBtn = document.getElementById('mobile-nav-last');
     const mobileNavMoveNumSpan = document.getElementById('mobile-nav-movenum');
 
-
-    // New Game Modal Elements
     const newGameModal = document.getElementById('new-game-modal');
-    // const closeModalBtn = document.querySelector('.close-modal-btn'); // Will be handled by a general selector
     const startGameBtn = document.getElementById('start-game-btn');
     const modalGameTitleInput = document.getElementById('modal-game-title');
     const modalBoardSizeSelect = document.getElementById('modal-board-size-select');
@@ -159,41 +136,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalWhiteRankInput = document.getElementById('modal-white-rank');
     const modalKomiInput = document.getElementById('modal-komi');
 
-    // Auth Modal Elements - To be removed or repurposed for Clerk
-    // const loginModalBtn = document.getElementById('login-modal-btn');
-    // const registerModalBtn = document.getElementById('register-modal-btn');
-    // const loginModal = document.getElementById('login-modal');
-    // const registerModal = document.getElementById('register-modal');
-    // const loginForm = document.getElementById('login-form');
-    // const registerForm = document.getElementById('register-form');
-    // const logoutBtn = document.getElementById('logout-btn');
-    // const authLinksDiv = document.getElementById('auth-links');
-    // const userGreetingDiv = document.getElementById('user-greeting');
-    // const usernameDisplaySpan = document.getElementById('username-display');
-    // const loginErrorMessageP = document.getElementById('login-error-message');
-    // const registerErrorMessageP = document.getElementById('register-error-message');
-
-    // General Modal Close Buttons (using data attribute) - Keep for New Game Modal
     const allCloseModalBtns = document.querySelectorAll('.close-modal-btn');
 
+    const API_BASE_URL = 'https://wrengobackend-env-1.eba-dge4uxje.us-east-2.elasticbeanstalk.com/api'; 
 
-    // API Base URL (for backend) - This will still be used for SGFs, Problems etc.
-    const API_BASE_URL = 'https://wrengobackend-env-1.eba-dge4uxje.us-east-2.elasticbeanstalk.com/api'; // Adjust if your backend runs elsewhere
-
-    // Game State Variables
-    let gameTitle = "wrengo"; // Keep lowercase as per user's HTML
-    let boardSize = parseInt(modalBoardSizeSelect.value);
+    let gameTitle = "wrengo";
+    let boardSize = parseInt(modalBoardSizeSelect.value); 
     let playerNames = { black: "Black", white: "White" };
     let playerRanks = { black: "??", white: "??" };
     let komi = 6.5;
-    let squareSize;
-    let board = [];
-    let currentPlayer = 1;
+    let squareSize; 
+    
+    let board = []; 
+    let currentPlayer = 1; 
     let blackCaptures = 0;
     let whiteCaptures = 0;
-    let boardHistory = [];
-    let gameMoves = [];
-    let currentMoveIndex = -1;
+    let boardHistory = []; 
+
+    let sgfGameRoot = null; 
+    let currentNode = null; 
+    let currentPathMoves = []; 
+    let currentMoveIndex = -1; 
 
     const STONE_COLOR = {
         BLACK: '#111', WHITE: '#f0f0f0',
@@ -202,20 +165,96 @@ document.addEventListener('DOMContentLoaded', () => {
     let BOARD_LINE_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-line-color').trim() || '#503720';
     let BOARD_BG_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--board-bg-color').trim() || '#e4b268';
 
-    function updateAssetSources() {
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        
-        // Update header logos
-        document.getElementById('mobile-logo-light').style.display = isDarkMode ? 'none' : 'inline-block';
-        document.getElementById('mobile-logo-dark').style.display = isDarkMode ? 'inline-block' : 'none';
+    function sgfCharToNum(char) { return char.charCodeAt(0) - 'a'.charCodeAt(0); }
+    function numToSgfChar(num) { return String.fromCharCode('a'.charCodeAt(0) + num); }
 
-        // Update button icons
-        newGameModalBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode new game symbol.svg' : 'assets/light mode new game symbol.svg';
-        loadSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode upload button.svg' : 'assets/light mode upload button.svg';
-        themeToggleBtn.querySelector('img').src = isDarkMode ? 'assets/light mode toggle.svg' : 'assets/dark mode toggle.svg'; // Icon shows opposite action
-        gameInfoSaveSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode save button.svg' : 'assets/light mode save button.svg';
+    function toSgfCoords(r, c) { 
+        return numToSgfChar(c) + numToSgfChar(r);
     }
 
+    function sgfCoordToRowCol(sgfCoord) { 
+        if (!sgfCoord || sgfCoord.length !== 2) return { r: -1, c: -1 };
+        const c = sgfCharToNum(sgfCoord[0]);
+        const r = sgfCharToNum(sgfCoord[1]);
+        if (r < 0 || c < 0 || r >= boardSize || c >= boardSize) return {r: -1, c: -1};
+        return { r, c };
+    }
+
+    class SgfNode {
+        constructor(properties = {}, parent = null) {
+            this.properties = properties; 
+            this.children = [];       
+            this.parent = parent;
+            this.selectedChildIndex = 0; 
+        }
+
+        addChildNode(childNode) {
+            this.children.push(childNode);
+            childNode.parent = this;
+            return childNode;
+        }
+        
+        createAndAddChild(properties = {}) {
+            const newNode = new SgfNode(properties, this);
+            this.children.push(newNode);
+            return newNode;
+        }
+
+        getSelectedChild() {
+            if (this.children.length === 0 || this.selectedChildIndex < 0 || this.selectedChildIndex >= this.children.length) {
+                return null;
+            }
+            return this.children[this.selectedChildIndex];
+        }
+
+        selectVariation(childIndex) {
+            if (childIndex >= 0 && childIndex < this.children.length) {
+                this.selectedChildIndex = childIndex;
+                return true;
+            }
+            return false;
+        }
+
+        getMoveData() { 
+            let player, sgfCoordsProp;
+            if (this.properties.B && this.properties.B[0]) {
+                player = 1; sgfCoordsProp = this.properties.B[0];
+            } else if (this.properties.W && this.properties.W[0]) {
+                player = 2; sgfCoordsProp = this.properties.W[0];
+            } else {
+                return null;
+            }
+            const { r, c } = sgfCoordToRowCol(sgfCoordsProp);
+            if (r === -1 || c === -1) return null; 
+            return { player, r, c, sgfCoords: sgfCoordsProp };
+        }
+
+        findChildByMove(player, r, c) {
+            const targetSgfCoords = toSgfCoords(r, c);
+            for (let i = 0; i < this.children.length; i++) {
+                const child = this.children[i];
+                const moveData = child.getMoveData();
+                if (moveData && moveData.player === player && moveData.sgfCoords === targetSgfCoords) {
+                    return { node: child, index: i };
+                }
+            }
+            return null;
+        }
+
+        getProp(propName) {
+            return (this.properties[propName] && this.properties[propName][0]) ? this.properties[propName][0] : null;
+        }
+    }
+
+    function updateAssetSources() {
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        document.getElementById('mobile-logo-light').style.display = isDarkMode ? 'none' : 'inline-block';
+        document.getElementById('mobile-logo-dark').style.display = isDarkMode ? 'inline-block' : 'none';
+        newGameModalBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode new game symbol.svg' : 'assets/light mode new game symbol.svg';
+        loadSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode upload button.svg' : 'assets/light mode upload button.svg';
+        themeToggleBtn.querySelector('img').src = isDarkMode ? 'assets/light mode toggle.svg' : 'assets/dark mode toggle.svg'; 
+        gameInfoSaveSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode save button.svg' : 'assets/light mode save button.svg';
+    }
 
     function showBoardPopup(message) {
         boardPopupMessageDiv.textContent = message;
@@ -234,51 +273,111 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateMoveNavigationText() {
-        if (currentMoveIndex === -1 && gameMoves.length === 0) { // New game, no moves yet
+        const totalMovesInCurrentPath = currentPathMoves.length;
+        if (currentMoveIndex === -1 && totalMovesInCurrentPath === 0) { 
             moveNavigationInfoDiv.textContent = `Move 0. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
             mobileNavMoveNumSpan.textContent = '0';
-        } else if (currentMoveIndex === -1 && gameMoves.length > 0) { // Navigated to before first move of a loaded game
-             moveNavigationInfoDiv.textContent = `Start. ${playerNames.black}'s turn.`; // Player 1 always starts
+        } else if (currentMoveIndex === -1 && totalMovesInCurrentPath >= 0) { 
+             moveNavigationInfoDiv.textContent = `Start. ${playerNames.black}'s turn.`;
              mobileNavMoveNumSpan.textContent = '0';
-        } else if (currentMoveIndex === gameMoves.length - 1) { // At the last move
-            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+        } else if (currentMoveIndex === totalMovesInCurrentPath - 1) { 
+            const hasContinuations = currentNode && currentNode.children.length > 0;
+            if (hasContinuations) {
+                 moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn. (Variations exist)`;
+            } else {
+                 moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+            }
             mobileNavMoveNumSpan.textContent = (currentMoveIndex + 1).toString();
-        } else { // Navigating somewhere in the middle
-            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${gameMoves.length}.`;
+        } else { 
+            moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${totalMovesInCurrentPath}.`;
             mobileNavMoveNumSpan.textContent = (currentMoveIndex + 1).toString();
         }
     }
 
+    function initGame(isModalStart = false, loadedSgfRootProps = null) {
+        let newBoardSize = 19; // Default
 
-    function initGame(isModalStart = false) {
-        if (isModalStart) {
+        if (isModalStart) { // New game from modal
             gameTitle = modalGameTitleInput.value.trim() || "wrengo";
-            document.title = gameTitle + " SGF";
-            boardSize = parseInt(modalBoardSizeSelect.value);
+            newBoardSize = parseInt(modalBoardSizeSelect.value);
             playerNames.black = modalBlackNameInput.value.trim() || "Black";
             playerRanks.black = modalBlackRankInput.value.trim() || "??";
             playerNames.white = modalWhiteNameInput.value.trim() || "White";
             playerRanks.white = modalWhiteRankInput.value.trim() || "??";
             komi = parseFloat(modalKomiInput.value) || 6.5;
-        } else {
-            document.title = gameTitle + " SGF";
+            
+            const rootPropsForNewGame = {
+                GM: ["1"], FF: ["4"], CA: ["UTF-8"], AP: ["Wrengo:1.1"],
+                SZ: [newBoardSize.toString()], GN: [gameTitle],
+                PB: [playerNames.black], PW: [playerNames.white],
+                BR: [playerRanks.black], WR: [playerRanks.white],
+                KM: [komi.toString()], DT: [new Date().toISOString().slice(0,10)], RU: ["Japanese"]
+            };
+            sgfGameRoot = new SgfNode(rootPropsForNewGame);
+            currentNode = sgfGameRoot;
+
+        } else if (loadedSgfRootProps) { // Loading from SGF, sgfGameRoot is already set by loadGameFromSgf
+            gameTitle = loadedSgfRootProps.GN?.[0] || "wrengo";
+            newBoardSize = parseInt(loadedSgfRootProps.SZ?.[0]) || 19; // boardSize global will be updated below
+            playerNames.black = loadedSgfRootProps.PB?.[0] || "Black";
+            playerRanks.black = loadedSgfRootProps.BR?.[0] || "??";
+            playerNames.white = loadedSgfRootProps.PW?.[0] || "White";
+            playerRanks.white = loadedSgfRootProps.WR?.[0] || "??";
+            komi = parseFloat(loadedSgfRootProps.KM?.[0]) || 6.5;
+            
+            if (sgfGameRoot) { // sgfGameRoot should have been set by loadGameFromSgf
+                currentNode = sgfGameRoot;
+            } else { // Should not happen if loadGameFromSgf ran correctly
+                console.error("initGame called for SGF load, but sgfGameRoot is not set! Recreating a basic one.");
+                const fallbackRootProps = { 
+                    GM: ["1"], FF: ["4"], CA: ["UTF-8"], AP: ["Wrengo:1.1"], RU: ["Japanese"],
+                    SZ: [newBoardSize.toString()], GN: [gameTitle], PB: [playerNames.black], PW: [playerNames.white],
+                    BR: [playerRanks.black], WR: [playerRanks.white], KM: [komi.toString()], DT: [new Date().toISOString().slice(0,10)]
+                 };
+                sgfGameRoot = new SgfNode(loadedSgfRootProps ? { ...fallbackRootProps, ...loadedSgfRootProps } : fallbackRootProps);
+                currentNode = sgfGameRoot;
+            }
+        } else { // Default init (e.g. on page load before any action)
+            gameTitle = "wrengo";
+            newBoardSize = 19;
+            playerNames = { black: "Black", white: "White" };
+            playerRanks = { black: "??", white: "??" };
+            komi = 6.5;
+            const defaultRootProps = {
+                GM: ["1"], FF: ["4"], CA: ["UTF-8"], AP: ["Wrengo:1.1"],
+                SZ: [newBoardSize.toString()], GN: [gameTitle],
+                PB: [playerNames.black], PW: [playerNames.white],
+                BR: [playerRanks.black], WR: [playerRanks.white],
+                KM: [komi.toString()], DT: [new Date().toISOString().slice(0,10)], RU: ["Japanese"]
+            };
+            sgfGameRoot = new SgfNode(defaultRootProps);
+            currentNode = sgfGameRoot;
         }
-        board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
-        currentPlayer = 1; blackCaptures = 0; whiteCaptures = 0;
-        boardHistory = []; gameMoves = []; currentMoveIndex = -1;
-        clearBoardPopupMessage(); statusMessageP.textContent = '';
+        
+        document.title = gameTitle + " SGF";
+        boardSize = newBoardSize; // Update global boardSize
+
+        currentPathMoves = [];
+        currentMoveIndex = -1;
+        
+        applyPathToBoard(); 
+
+        clearBoardPopupMessage();
+        statusMessageP.textContent = '';
         updateMoveNavigationText();
-        updateGameInfo(); resizeCanvas();
+        updateGameInfo(); 
+        resizeCanvas();   
     }
+
 
     function resizeCanvas() {
         const boardContainer = document.getElementById('board-container');
         let containerWidth = boardContainer.offsetWidth;
         if (containerWidth === 0) {
             const boardArea = document.getElementById('board-area');
-            containerWidth = (boardArea && boardArea.offsetWidth > 0) ? boardArea.offsetWidth : window.innerWidth * 0.8; // Use more width
+            containerWidth = (boardArea && boardArea.offsetWidth > 0) ? boardArea.offsetWidth : window.innerWidth * 0.8; 
         }
-        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.75); // Adjusted height usage
+        const maxCanvasSize = Math.min(containerWidth, window.innerHeight * 0.75); 
         squareSize = Math.floor(maxCanvasSize / (boardSize + 1));
         const canvasSize = squareSize * (boardSize + 1);
         canvas.width = canvasSize; canvas.height = canvasSize;
@@ -305,13 +404,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function getStarPoints(size) { /* ... (no change) ... */ 
+    function getStarPoints(size) { 
         if (size === 9) return [{x:2,y:2},{x:6,y:2},{x:2,y:6},{x:6,y:6},{x:4,y:4}];
         if (size === 13) return [{x:3,y:3},{x:9,y:3},{x:3,y:9},{x:9,y:9},{x:6,y:6}];
         if (size === 19) return [{x:3,y:3},{x:9,y:3},{x:15,y:3},{x:3,y:9},{x:9,y:9},{x:15,y:9},{x:3,y:15},{x:9,y:15},{x:15,y:15}];
         return [];
     }
-    function drawStone(row, col, player, isPreview = false) { /* ... (no change) ... */ 
+    function drawStone(row, col, player, isPreview = false) { 
         const padding = squareSize / 2;
         const stoneRadius = squareSize * 0.45;
         const x = padding + col * squareSize + squareSize / 2;
@@ -325,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineWidth = 0.5;
         ctx.stroke();
     }
-    function updateGameInfo() { /* ... (no change to highlighting logic) ... */ 
+    function updateGameInfo() { 
         blackPlayerNameDisplay.innerHTML = `${playerNames.black} <span class="player-rank">(${playerRanks.black})</span>`;
         whitePlayerNameDisplay.innerHTML = `${playerNames.white} <span class="player-rank">(${playerRanks.white})</span>`;
         blackCapturesSpan.textContent = blackCaptures;
@@ -341,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Modal Handling ---
     function openModal(modalElement) {
         if (modalElement) modalElement.style.display = 'flex';
     }
@@ -351,47 +449,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     newGameModalBtn.addEventListener('click', () => openModal(newGameModal));
-    // Removed event listeners for old login/register modal buttons
 
     allCloseModalBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const modalId = btn.dataset.modalId;
             if (modalId) {
                 const modalToClose = document.getElementById(modalId);
-                if (modalToClose) closeModal(modalToClose); // Check if modalToClose exists
+                if (modalToClose) closeModal(modalToClose); 
             }
         });
     });
     
     if (startGameBtn) startGameBtn.addEventListener('click', () => { initGame(true); closeModal(newGameModal); });
 
-
-    // Close modal if clicked outside of modal-content
     window.addEventListener('click', (event) => {
         if (event.target.classList.contains('modal')) {
             closeModal(event.target);
         }
     });
 
-    // --- Authentication Logic (To be replaced by Clerk) ---
-    // function handleRegister(event) { ... } // Removed
-    // async function handleLogin(event) { ... } // Removed
-    // function handleLogout() { ... } // Removed
-    // function updateAuthUI(isLoggedIn, userData = null) { ... } // Removed
-    // async function checkInitialAuthState() { ... } // Removed
-
-    // Removed event listeners for old login/register forms and logout button
-
-
     loadSgfBtn.addEventListener('click', () => sgfFileInput.click());
-    sgfFileInput.addEventListener('change', (event) => { /* ... (no change) ... */ 
+    sgfFileInput.addEventListener('change', (event) => { 
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const sgfData = parseSgfContent(e.target.result);
-                    if (sgfData) loadGameFromSgf(sgfData);
+                    const sgfRoot = parseSgfContent(e.target.result);
+                    if (sgfRoot) loadGameFromSgf(sgfRoot);
                     else { statusMessageP.textContent = `Error parsing SGF file: ${file.name}.`; moveNavigationInfoDiv.textContent = ''; }
                 } catch (error) {
                     console.error("Error processing SGF:", error);
@@ -403,68 +488,253 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function parseSgfContent(sgfString) { /* ... (no change to SGF parsing itself) ... */ 
-        const data = {
-            size: 19, komi: 6.5, moves: [], rules: "Japanese",
-            gameName: "wrengo", blackName: "Black", whiteName: "White", blackRank: "??", whiteRank: "??"
-        };
-        const gameNameMatch = sgfString.match(/GN\[([^\]]*)\]/);
-        if (gameNameMatch) data.gameName = gameNameMatch[1].trim() || "wrengo";
-        const sizeMatch = sgfString.match(/SZ\[(\d+)\]/); if (sizeMatch) data.size = parseInt(sizeMatch[1]);
-        const komiMatch = sgfString.match(/KM\[([\d\.]+)\]/); if (komiMatch) data.komi = parseFloat(komiMatch[1]);
-        const blackNameMatch = sgfString.match(/PB\[([^\]]*)\]/); if (blackNameMatch) data.blackName = blackNameMatch[1].trim() || "Black";
-        const whiteNameMatch = sgfString.match(/PW\[([^\]]*)\]/); if (whiteNameMatch) data.whiteName = whiteNameMatch[1].trim() || "White";
-        const blackRankMatch = sgfString.match(/BR\[([^\]]*)\]/); if (blackRankMatch) data.blackRank = blackRankMatch[1].trim() || "??";
-        const whiteRankMatch = sgfString.match(/WR\[([^\]]*)\]/); if (whiteRankMatch) data.whiteRank = whiteRankMatch[1].trim() || "??";
-        const moveRegex = /;([BW])\[([a-s]{2})\]/g; let match;
-        while ((match = moveRegex.exec(sgfString)) !== null) {
-            const player = match[1] === 'B' ? 1 : 2; const coords = match[2];
-            if (coords.length === 2) {
-                const c = coords.charCodeAt(0) - 'a'.charCodeAt(0); const r = coords.charCodeAt(1) - 'a'.charCodeAt(0);
-                if (r >= 0 && r < data.size && c >= 0 && c < data.size) data.moves.push({ player, r, c });
-                else console.warn(`Invalid SGF coordinate: ${coords} for board size ${data.size}`);
+    function parseSgfContent(sgfString) {
+        let currentIndex = 0;
+        let rootNode = null;
+        let currentStack = []; 
+
+        function skipWhitespaceAndComments() {
+            while (currentIndex < sgfString.length && /\s/.test(sgfString[currentIndex])) {
+                currentIndex++;
             }
         }
-        return data;
-    }
 
-    function loadGameFromSgf(sgfData) { /* ... (no change to core SGF loading logic) ... */ 
-        modalGameTitleInput.value = sgfData.gameName;
-        modalBoardSizeSelect.value = sgfData.size.toString();
-        modalBlackNameInput.value = sgfData.blackName;
-        modalBlackRankInput.value = sgfData.blackRank;
-        modalWhiteNameInput.value = sgfData.whiteName;
-        modalWhiteRankInput.value = sgfData.whiteRank;
-        modalKomiInput.value = sgfData.komi;
-        gameTitle = sgfData.gameName; boardSize = sgfData.size;
-        playerNames.black = sgfData.blackName; playerNames.white = sgfData.whiteName;
-        playerRanks.black = sgfData.blackRank; playerRanks.white = sgfData.whiteRank;
-        komi = sgfData.komi;
-        initGame(false); 
-        gameMoves = sgfData.moves.map(m => ({ ...m })); 
-        if (gameMoves.length > 0) navigateToMove(gameMoves.length - 1);
-        else {
-            updateMoveNavigationText(); // Ensure text is correct for no moves
-            statusMessageP.textContent = ''; 
+        function parseProperties() {
+            const props = {};
+            skipWhitespaceAndComments();
+            while (currentIndex < sgfString.length && sgfString[currentIndex] !== ';' && sgfString[currentIndex] !== '(' && sgfString[currentIndex] !== ')') {
+                let propName = "";
+                while (currentIndex < sgfString.length && /[A-Z]/.test(sgfString[currentIndex])) {
+                    propName += sgfString[currentIndex++];
+                }
+                if (!propName) {
+                    if (currentIndex < sgfString.length && sgfString[currentIndex] !== ';' && sgfString[currentIndex] !== '(' && sgfString[currentIndex] !== ')') {
+                        console.warn("SGF Parse: Expected property name at index", currentIndex, `Found: '${sgfString[currentIndex]}'`);
+                        currentIndex++; 
+                        continue;
+                    }
+                    break; 
+                }
+                props[propName] = [];
+                skipWhitespaceAndComments();
+                while (sgfString[currentIndex] === '[') {
+                    currentIndex++; 
+                    let value = "";
+                    let escape = false;
+                    while (currentIndex < sgfString.length) {
+                        const char = sgfString[currentIndex++];
+                        if (escape) {
+                            value += char;
+                            escape = false;
+                        } else if (char === '\\') {
+                            escape = true;
+                        } else if (char === ']') {
+                            break;
+                        } else {
+                            value += char;
+                        }
+                    }
+                    props[propName].push(value);
+                    skipWhitespaceAndComments();
+                }
+            }
+            return props;
         }
-        if (!statusMessageP.textContent.startsWith("Error")) statusMessageP.textContent = '';
+        
+        function parseSequence() {
+            let seqParent = currentStack.length > 0 ? currentStack[currentStack.length - 1] : null;
+            let lastNodeInSequence = seqParent;
+
+            while (currentIndex < sgfString.length && sgfString[currentIndex] !== ')') {
+                skipWhitespaceAndComments();
+                if (sgfString[currentIndex] === ';') {
+                    currentIndex++; 
+                    const properties = parseProperties();
+                    if (properties.SZ && properties.SZ[0]) {
+                        const sz = parseInt(properties.SZ[0]);
+                        if (!isNaN(sz) && sz > 0) boardSize = sz; 
+                    }
+
+                    const newNode = new SgfNode(properties);
+                    if (!rootNode) { 
+                        rootNode = newNode;
+                        lastNodeInSequence = rootNode;
+                    } else if (lastNodeInSequence) {
+                        lastNodeInSequence.addChildNode(newNode);
+                        lastNodeInSequence = newNode;
+                    } else {
+                        console.error("SGF Parse: No parent for new node.");
+                        return; 
+                    }
+                } else if (sgfString[currentIndex] === '(') {
+                    currentIndex++; 
+                    if (!lastNodeInSequence && rootNode) lastNodeInSequence = rootNode; 
+                    else if (!lastNodeInSequence && !rootNode) { 
+                         console.warn("SGF Parse: Variation starts before any root node properties at index", currentIndex);
+                         rootNode = new SgfNode({SZ: [boardSize.toString()]}); 
+                         lastNodeInSequence = rootNode;
+                    }
+                    currentStack.push(lastNodeInSequence); 
+                    parseSequence(); 
+                    currentStack.pop();
+                    skipWhitespaceAndComments();
+                    if (sgfString[currentIndex] === ')') {
+                        currentIndex++; 
+                    } else {
+                        console.warn("SGF Parse: Missing ')' after variation at index", currentIndex);
+                    }
+                } else if (sgfString[currentIndex] === ')') {
+                    break; 
+                } else if (currentIndex < sgfString.length) {
+                     console.warn("SGF Parse: Unexpected token in sequence at index", currentIndex, `Token: '${sgfString[currentIndex]}'`);
+                     currentIndex++; 
+                } else {
+                    break; 
+                }
+            }
+        }
+
+        skipWhitespaceAndComments();
+        if (sgfString[currentIndex] === '(') {
+            currentIndex++; 
+            parseSequence(); 
+            skipWhitespaceAndComments();
+            if (sgfString[currentIndex] === ')') {
+                currentIndex++; 
+            } else {
+                 console.warn("SGF Parse: SGF content did not end with ')' at index", currentIndex);
+            }
+        } else {
+            console.error("SGF Parse: SGF must start with '('.");
+            return new SgfNode({SZ: [boardSize.toString()]}); 
+        }
+        
+        if (rootNode && !rootNode.getProp("SZ")) {
+            if (!rootNode.properties.SZ) rootNode.properties.SZ = [boardSize.toString()];
+        }
+        return rootNode || new SgfNode({SZ: [boardSize.toString()]}); 
     }
 
-    function navigateToMove(moveIndex) {
-        if (moveIndex < -1 || moveIndex >= gameMoves.length) return;
+
+    function loadGameFromSgf(parsedNode) {
+        sgfGameRoot = parsedNode; // Set the global tree with children
+        if (!sgfGameRoot) {
+            statusMessageP.textContent = "Error: Parsed SGF data is invalid.";
+            initGame(false); // Initialize a default empty game
+            return;
+        }
+
+        const rootActualProps = sgfGameRoot.properties;
+        // Ensure global boardSize is updated from SGF before initGame uses it
+        if (rootActualProps.SZ && rootActualProps.SZ[0]) {
+            const sz = parseInt(rootActualProps.SZ[0]);
+            if (!isNaN(sz) && sz > 0) boardSize = sz;
+        }
+        
+        // Call initGame to set up game parameters (title, players, komi) using SGF root's props
+        // Crucially, initGame will now *not* overwrite the sgfGameRoot if called this way.
+        initGame(false, rootActualProps); 
+
+        // Build the initial currentPathMoves from the main variation of the loaded SGF
+        let path = [];
+        let nodeForPath = sgfGameRoot; 
+        while(nodeForPath) {
+            const moveData = nodeForPath.getMoveData();
+            // Add to path if it's an actual B/W move.
+            // For root node, only add if it's a B/W move itself (e.g. SGF starts ;B[aa])
+            // For child nodes, always add if it's a B/W move.
+            if (moveData && (nodeForPath !== sgfGameRoot || (nodeForPath === sgfGameRoot && (moveData.player === 1 || moveData.player === 2)))) {
+                 path.push({ ...moveData, sgfNodeRef: nodeForPath });
+            }
+
+            if (nodeForPath.children.length > 0) {
+                nodeForPath = nodeForPath.getSelectedChild(); 
+            } else {
+                nodeForPath = null; 
+            }
+        }
+        
+        currentPathMoves = path;
+        currentMoveIndex = path.length > 0 ? path.length - 1 : -1;
+
+        if (currentMoveIndex !== -1) {
+            currentNode = currentPathMoves[currentMoveIndex].sgfNodeRef;
+        } else { 
+            currentNode = sgfGameRoot; // Already set by initGame, but good to be explicit
+        }
+        
+        applyPathToBoard(); // Rebuild board state for the loaded SGF's main line
+        updateMoveNavigationText();
+        statusMessageP.textContent = ''; 
+        updateGameInfo();
+        // resizeCanvas is called by initGame, but call again if boardSize changed explicitly here
+        if (rootActualProps.SZ && rootActualProps.SZ[0]) resizeCanvas(); 
+        drawBoard();
+    }
+
+    // Rebuilds the board state (board, currentPlayer, captures, history) based on currentPathMoves up to currentMoveIndex
+    function applyPathToBoard() {
         board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
-        blackCaptures = 0; whiteCaptures = 0; boardHistory = [];
-        let tempCurrentPlayer = 1;
-        for (let i = 0; i <= moveIndex; i++) {
-            const move = gameMoves[i];
-            if (!move || typeof move.r === 'undefined' || typeof move.c === 'undefined') {
-                statusMessageP.textContent = `Error: Invalid SGF data at move ${i + 1}.`; return;
+        blackCaptures = 0; whiteCaptures = 0;
+        boardHistory = []; 
+        let pathCurrentPlayer = 1; 
+
+        if (sgfGameRoot) {
+            const setupProperties = ['AB', 'AW', 'AE'];
+            setupProperties.forEach(prop => {
+                if (sgfGameRoot.properties[prop]) {
+                    sgfGameRoot.properties[prop].forEach(sgfCoord => {
+                        const {r, c} = sgfCoordToRowCol(sgfCoord);
+                        if (r !== -1 && c !== -1) {
+                            if (prop === 'AB') board[r][c] = 1;
+                            else if (prop === 'AW') board[r][c] = 2;
+                            else if (prop === 'AE') board[r][c] = 0; 
+                        }
+                    });
+                }
+            });
+            if (sgfGameRoot.properties.PL && sgfGameRoot.properties.PL[0]) {
+                pathCurrentPlayer = (sgfGameRoot.properties.PL[0].toUpperCase() === 'W') ? 2 : 1;
             }
+        }
+        boardHistory.push(board.map(r => r.join('')).join('|')); 
+
+        for (let i = 0; i <= currentMoveIndex && i < currentPathMoves.length; i++) {
+            const move = currentPathMoves[i];
+            if (!move || typeof move.r === 'undefined' || typeof move.c === 'undefined') {
+                console.error(`Invalid move data at index ${i} in currentPathMoves.`);
+                statusMessageP.textContent = `Error: Corrupted move data at move ${i + 1}.`;
+                return;
+            }
+            
+            if (i === 0 && !(sgfGameRoot.properties.PL && sgfGameRoot.properties.PL[0])) { 
+                pathCurrentPlayer = move.player; // If no PL, first move in path dictates starting player for path replay
+            } else if (i > 0 && currentPathMoves[i-1].player === move.player) {
+                 console.warn(`SGF Replay: Consecutive moves by same player at move ${i + 1}. Player ${move.player}`);
+            } else if (i > 0 && currentPathMoves[i-1].player !== move.player) {
+                pathCurrentPlayer = move.player; // Current move's player
+            } else if (i === 0 && sgfGameRoot.properties.PL && sgfGameRoot.properties.PL[0]) {
+                // PL is set, pathCurrentPlayer is already correct from PL.
+                // We still need to ensure move.player matches pathCurrentPlayer for this first move.
+                if (move.player !== pathCurrentPlayer) {
+                     console.warn(`SGF Replay: Player mismatch for first move ${i+1} despite PL. Expected ${pathCurrentPlayer}, got ${move.player}. Forcing.`);
+                     // pathCurrentPlayer = move.player; // Or error
+                }
+            }
+
+
             const tempBoardState = board.map(arr => arr.slice());
-            tempBoardState[move.r][move.c] = move.player;
+
+            if (tempBoardState[move.r][move.c] !== 0 && !(sgfGameRoot.properties.AB?.includes(toSgfCoords(move.r, move.c)) || sgfGameRoot.properties.AW?.includes(toSgfCoords(move.r, move.c)) ) ) {
+                console.warn(`SGF Replay: Attempt to play on occupied stone at (${move.r},${move.c}) at move ${i+1}. Skipping placement.`);
+            } else {
+                 tempBoardState[move.r][move.c] = move.player;
+            }
+
             let capturedInStep = [];
             const opponentInStep = (move.player === 1) ? 2 : 1;
             const neighborsInStep = getNeighbors(move.r, move.c);
+
             for (const n of neighborsInStep) {
                 if (tempBoardState[n.r][n.c] === opponentInStep) {
                     const group = getGroup(n.r, n.c, tempBoardState);
@@ -474,25 +744,60 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+
             if (capturedInStep.length > 0) {
-                if (move.player === 1) whiteCaptures += capturedInStep.length;
-                else blackCaptures += capturedInStep.length;
+                if (move.player === 1) whiteCaptures += capturedInStep.length; 
+                else blackCaptures += capturedInStep.length;                   
             }
+            
             const groupAfterPlacement = getGroup(move.r, move.c, tempBoardState);
-            if (groupAfterPlacement.liberties === 0 && capturedInStep.length === 0) console.warn(`SGF Replay: Suicide at move ${i+1}`);
-            board = tempBoardState;
+            if (groupAfterPlacement.liberties === 0 && capturedInStep.length === 0 && tempBoardState[move.r][move.c] !== 0) {
+                console.warn(`SGF Replay: Suicide at move ${i+1} (${move.r},${move.c}).`);
+            }
+
+            board = tempBoardState; 
             boardHistory.push(board.map(r => r.join('')).join('|'));
-            tempCurrentPlayer = opponentInStep;
+            pathCurrentPlayer = opponentInStep; 
         }
-        currentMoveIndex = moveIndex;
-        currentPlayer = tempCurrentPlayer;
-        updateMoveNavigationText(); // Use centralized function
-        statusMessageP.textContent = '';
+
+        currentPlayer = pathCurrentPlayer; 
         updateGameInfo();
         drawBoard();
     }
 
-    gameInfoSaveSgfBtn.addEventListener('click', () => { /* ... (no change) ... */ 
+
+    function navigateToMove(targetMoveIndex) { 
+        if (!sgfGameRoot) return;
+
+        if (targetMoveIndex < -1 || targetMoveIndex >= currentPathMoves.length) {
+            if (targetMoveIndex === -1 && currentPathMoves.length === 0) { 
+                 // Allow this
+            } else if (targetMoveIndex === currentPathMoves.length && currentPathMoves.length > 0) { 
+                 targetMoveIndex = currentPathMoves.length - 1; 
+            } else if (targetMoveIndex >= currentPathMoves.length && currentPathMoves.length > 0) {
+                 console.warn("NavigateToMove: targetMoveIndex out of current path bounds.", targetMoveIndex, "Path length:", currentPathMoves.length);
+                 targetMoveIndex = currentPathMoves.length -1; 
+            } else if (targetMoveIndex >= 0 && currentPathMoves.length === 0) { 
+                console.warn("NavigateToMove: No moves in current path to navigate to index", targetMoveIndex);
+                targetMoveIndex = -1; 
+            }
+        }
+        
+        currentMoveIndex = targetMoveIndex;
+
+        if (currentMoveIndex === -1) {
+            currentNode = sgfGameRoot;
+        } else {
+            currentNode = currentPathMoves[currentMoveIndex].sgfNodeRef;
+        }
+        
+        applyPathToBoard(); 
+        updateMoveNavigationText();
+        statusMessageP.textContent = '';
+    }
+
+
+    gameInfoSaveSgfBtn.addEventListener('click', () => {
         const sgfContent = generateSgfContent();
         if (sgfContent) {
             const blob = new Blob([sgfContent], { type: 'application/x-go-sgf;charset=utf-8' });
@@ -502,46 +807,103 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(a.href); 
+            URL.revokeObjectURL(a.href);
             const originalNavText = moveNavigationInfoDiv.textContent;
             moveNavigationInfoDiv.textContent = 'SGF file saved.';
             setTimeout(() => moveNavigationInfoDiv.textContent = originalNavText, 2000);
         } else {
             const originalNavText = moveNavigationInfoDiv.textContent;
-            moveNavigationInfoDiv.textContent = 'No moves to save yet.';
+            moveNavigationInfoDiv.textContent = 'No game data to save.';
             setTimeout(() => moveNavigationInfoDiv.textContent = originalNavText, 2000);
         }
     });
-    function generateSgfContent() { /* ... (no change) ... */ 
-        if (gameMoves.length === 0 && boardSize === 0) return null;
-        let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[ClineGo:1.0]KM[${komi}]SZ[${boardSize}]GN[${gameTitle}]PB[${playerNames.black}]PW[${playerNames.white}]BR[${playerRanks.black}]WR[${playerRanks.white}]DT[${new Date().toISOString().slice(0,10)}]RU[Japanese]`;
-        gameMoves.forEach(move => {
-            const playerChar = move.player === 1 ? 'B' : 'W';
-            const sgfCol = String.fromCharCode('a'.charCodeAt(0) + move.c);
-            const sgfRow = String.fromCharCode('a'.charCodeAt(0) + move.r);
-            sgf += `;${playerChar}[${sgfCol}${sgfRow}]`;
-        });
-        sgf += ')';
-        return sgf;
+
+    function generateSgfContent() {
+        if (!sgfGameRoot) return null;
+        let sgfString = ""; 
+        function buildSgfRecursive(node, isFirstNodeInSequence = true) {
+            if (!node) return;
+
+            let propertiesString = "";
+            if (node === sgfGameRoot && !node.properties.SZ) {
+                node.properties.SZ = [boardSize.toString()];
+            }
+            if (node === sgfGameRoot) {
+                const defaultRootProps = { GM: ["1"], FF: ["4"], CA: ["UTF-8"], AP: ["Wrengo:1.1"], RU: ["Japanese"]};
+                for (const prop in defaultRootProps) {
+                    if (!node.properties[prop]) node.properties[prop] = defaultRootProps[prop];
+                }
+                if (!node.properties.KM) node.properties.KM = [komi.toString()];
+                if (!node.properties.GN) node.properties.GN = [gameTitle];
+                if (!node.properties.PB) node.properties.PB = [playerNames.black];
+                if (!node.properties.PW) node.properties.PW = [playerNames.white];
+                if (!node.properties.BR) node.properties.BR = [playerRanks.black];
+                if (!node.properties.WR) node.properties.WR = [playerRanks.white];
+                if (!node.properties.DT) node.properties.DT = [new Date().toISOString().slice(0,10)];
+            }
+
+
+            for (const key in node.properties) {
+                if (node.properties.hasOwnProperty(key)) {
+                    if (node.properties[key].length === 0 && key !== 'B' && key !== 'W') continue;
+
+                    node.properties[key].forEach(val => {
+                        const escapedVal = val.toString().replace(/\\/g, '\\\\').replace(/]/g, '\\]');
+                        propertiesString += `${key}[${escapedVal}]`;
+                    });
+                }
+            }
+
+            if (isFirstNodeInSequence || propertiesString || (node !== sgfGameRoot && (node.properties.B || node.properties.W))) { 
+                sgfString += ";" + propertiesString;
+            }
+
+
+            if (node.children.length > 0) {
+                if (node.children.length === 1) {
+                    buildSgfRecursive(node.children[node.selectedChildIndex], false);
+                } else {
+                    buildSgfRecursive(node.children[node.selectedChildIndex], false);
+                    for (let i = 0; i < node.children.length; i++) {
+                        if (i === node.selectedChildIndex) continue;
+                        sgfString += "(";
+                        buildSgfRecursive(node.children[i], true); 
+                        sgfString += ")";
+                    }
+                }
+            }
+        }
+
+        sgfString = "(";
+        buildSgfRecursive(sgfGameRoot, true); 
+        sgfString += ")";
+
+        return sgfString;
     }
 
-    canvas.addEventListener('mousemove', (event) => { /* ... (no change) ... */ 
+
+    canvas.addEventListener('mousemove', (event) => { 
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
         const col = Math.floor((x - padding) / squareSize); const row = Math.floor((y - padding) / squareSize);
         drawBoard();
-        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize && board[row][col] === 0) {
+        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize && board[row][col] === 0 && sgfGameRoot) { 
             drawStone(row, col, currentPlayer, true);
         }
     });
-    canvas.addEventListener('mouseout', () => drawBoard());
-    canvas.addEventListener('click', (event) => { /* ... (no change) ... */ 
+    canvas.addEventListener('mouseout', () => { if (sgfGameRoot) drawBoard(); }); 
+    canvas.addEventListener('click', (event) => {
+        if (!sgfGameRoot) return; 
+
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
         const col = Math.floor((x - padding) / squareSize); const row = Math.floor((y - padding) / squareSize);
-        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) handleMove(row, col);
+        
+        if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
+            handleMove(row, col);
+        }
     });
 
     function handleMove(row, col) {
@@ -549,65 +911,95 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessageP.textContent = '';
 
         if (board[row][col] !== 0) {
-            // Silently ignore or provide brief non-error feedback via moveNavigationInfoDiv if desired
+            showBoardPopup('Point occupied');
             return;
         }
 
-        const tempBoard = board.map(arr => arr.slice());
-        tempBoard[row][col] = currentPlayer;
-        let capturedStones = [];
+        const tempBoardForCheck = board.map(arr => arr.slice());
+        tempBoardForCheck[row][col] = currentPlayer; 
+
+        let capturedStonesThisTurn = [];
         const opponent = (currentPlayer === 1) ? 2 : 1;
         const neighbors = getNeighbors(row, col);
+
         for (const n of neighbors) {
-            if (tempBoard[n.r][n.c] === opponent) {
-                const group = getGroup(n.r, n.c, tempBoard);
+            if (tempBoardForCheck[n.r][n.c] === opponent) {
+                const group = getGroup(n.r, n.c, tempBoardForCheck);
                 if (group.liberties === 0) {
-                    capturedStones.push(...group.stones);
-                    group.stones.forEach(stone => tempBoard[stone.r][stone.c] = 0);
+                    capturedStonesThisTurn.push(...group.stones);
+                    group.stones.forEach(stone => tempBoardForCheck[stone.r][stone.c] = 0);
                 }
             }
         }
-        if (capturedStones.length > 0) {
-            if (currentPlayer === 1) whiteCaptures += capturedStones.length;
-            else blackCaptures += capturedStones.length;
+
+        const currentGroup = getGroup(row, col, tempBoardForCheck);
+        if (currentGroup.liberties === 0 && capturedStonesThisTurn.length === 0) {
+            showBoardPopup('Illegal move: Suicide');
+            return; 
         }
 
-        const currentGroup = getGroup(row, col, tempBoard);
-        if (currentGroup.liberties === 0 && capturedStones.length === 0) {
-            showBoardPopup('Illegal move, suicide');
-            if (capturedStones.length > 0) {
-                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length; else blackCaptures -= capturedStones.length;
-            }
+        const boardStateString = tempBoardForCheck.map(r => r.join('')).join('|');
+        // More precise Ko check: if current board state matches the state before opponent's last move.
+        // boardHistory[boardHistory.length - 1] is the state *after* the current player's *previous* move (or initial state).
+        // boardHistory[boardHistory.length - 2] is the state *after* the opponent's *previous* move.
+        // This is the state we'd revert to if Ko.
+        if (boardHistory.length >= 2 && boardHistory[boardHistory.length - 2] === boardStateString && capturedStonesThisTurn.length === 1) {
+            showBoardPopup('Illegal move: Ko');
             return;
         }
 
-        const boardStateString = tempBoard.map(r => r.join('')).join('|');
-        if (boardHistory.includes(boardStateString)) {
-            showBoardPopup('Ko!');
-            if (capturedStones.length > 0) {
-                 if (currentPlayer === 1) whiteCaptures -= capturedStones.length; else blackCaptures -= capturedStones.length;
-            }
-            return;
-        }
 
-        board = tempBoard;
-        boardHistory.push(boardStateString);
-        if (currentMoveIndex < gameMoves.length - 1 && currentMoveIndex !== -1) {
-            gameMoves = gameMoves.slice(0, currentMoveIndex + 1);
+        const sgfCoords = toSgfCoords(row, col);
+        const moveProp = currentPlayer === 1 ? 'B' : 'W';
+        const newMoveProperties = { [moveProp]: [sgfCoords] };
+        
+        let existingVariation = currentNode.findChildByMove(currentPlayer, row, col);
+        let newPlayedNode;
+
+        if (existingVariation) {
+            currentNode.selectVariation(existingVariation.index);
+            newPlayedNode = existingVariation.node;
+        } else {
+            if (currentMoveIndex < currentPathMoves.length -1) {
+                currentPathMoves = currentPathMoves.slice(0, currentMoveIndex + 1);
+            }
+            newPlayedNode = currentNode.createAndAddChild(newMoveProperties);
+            currentNode.selectVariation(currentNode.children.length - 1); 
         }
-        const movePlayer = currentPlayer;
-        gameMoves.push({ player: movePlayer, r: row, c: col });
-        currentMoveIndex = gameMoves.length - 1;
-        currentPlayer = opponent;
-        updateGameInfo();
-        drawBoard();
-        updateMoveNavigationText(); // Use centralized function
-        if (capturedStones.length > 0) { // Append capture info if any
-             moveNavigationInfoDiv.textContent += ` Captured ${capturedStones.length}.`;
+        
+        currentNode = newPlayedNode; 
+
+        const newPath = [];
+        let pathTracerNode = sgfGameRoot; 
+        
+        while(pathTracerNode) {
+            const moveData = pathTracerNode.getMoveData();
+            if (moveData && (pathTracerNode !== sgfGameRoot || (pathTracerNode === sgfGameRoot && (moveData.player === 1 || moveData.player === 2) ) ) ) {
+                 newPath.push({ ...moveData, sgfNodeRef: pathTracerNode });
+            }
+            if (pathTracerNode === currentNode) break; 
+
+            if (pathTracerNode.children.length > 0) {
+                pathTracerNode = pathTracerNode.getSelectedChild();
+                if (!pathTracerNode) break; 
+            } else {
+                break; 
+            }
+            if (newPath.length > boardSize * boardSize * 3) { console.error("Path reconstruction runaway"); break; } 
+        }
+        currentPathMoves = newPath;
+        currentMoveIndex = currentPathMoves.length - 1;
+        
+        applyPathToBoard(); 
+
+        updateMoveNavigationText();
+        if (capturedStonesThisTurn.length > 0) {
+             moveNavigationInfoDiv.textContent += ` Captured ${capturedStonesThisTurn.length}.`;
         }
     }
 
-    function getNeighbors(r, c) { /* ... (no change) ... */ 
+
+    function getNeighbors(r, c) { 
         const neighbors = [];
         if (r > 0) neighbors.push({ r: r - 1, c: c });
         if (r < boardSize - 1) neighbors.push({ r: r + 1, c: c });
@@ -615,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (c < boardSize - 1) neighbors.push({ r: r, c: c + 1 });
         return neighbors;
     }
-    function getGroup(r, c, currentBoardState) { /* ... (no change) ... */ 
+    function getGroup(r, c, currentBoardState) { 
         const player = currentBoardState[r][c];
         if (player === 0) return { stones: [], liberties: 0 };
         const stones = []; const liberties = new Set();
@@ -635,40 +1027,113 @@ document.addEventListener('DOMContentLoaded', () => {
         return { stones, liberties: liberties.size, player };
     }
 
-    // Mobile Navigation Event Listeners
-    mobileNavFirstBtn.addEventListener('click', () => { if (gameMoves.length > 0) navigateToMove(0); });
-    mobileNavPrevBtn.addEventListener('click', () => { if (currentMoveIndex > 0) navigateToMove(currentMoveIndex - 1); else if (currentMoveIndex === 0) navigateToMove(-1);});
-    mobileNavMoveNextBtn.addEventListener('click', () => { if (currentMoveIndex < gameMoves.length - 1) navigateToMove(currentMoveIndex + 1); });
-    mobileNavLastBtn.addEventListener('click', () => { if (gameMoves.length > 0) navigateToMove(gameMoves.length - 1); });
+    mobileNavFirstBtn.addEventListener('click', () => {
+        if (!sgfGameRoot) return;
+        let firstMoveNode = sgfGameRoot;
+        let path = [];
+        // Find the first actual B/W move in the main variation
+        let tempNode = sgfGameRoot;
+        while(tempNode){
+            const moveData = tempNode.getMoveData();
+            if(moveData && (tempNode !== sgfGameRoot || (moveData.player ===1 || moveData.player ===2))){
+                path.push({...moveData, sgfNodeRef: tempNode});
+                break; // Found the first move
+            }
+            if(tempNode.children.length > 0){
+                tempNode = tempNode.getSelectedChild();
+            } else {
+                tempNode = null; // No moves
+            }
+        }
+
+        if (path.length > 0) {
+            currentPathMoves = path; // Path to the first move
+            navigateToMove(0);       // Navigate to it (index 0)
+        } else { 
+            navigateToMove(-1);      // No moves, navigate to root
+        }
+    });
+    mobileNavPrevBtn.addEventListener('click', () => {
+        if (!sgfGameRoot) return;
+        if (currentMoveIndex >= 0) navigateToMove(currentMoveIndex - 1);
+    });
+    mobileNavMoveNextBtn.addEventListener('click', () => {
+        if (!sgfGameRoot || !currentNode) return;
+        const nextNode = currentNode.getSelectedChild();
+        if (nextNode && nextNode.getMoveData()) {
+            const basePath = (currentMoveIndex === -1) ? [] : currentPathMoves.slice(0, currentMoveIndex + 1);
+            currentPathMoves = [...basePath, { ...nextNode.getMoveData(), sgfNodeRef: nextNode }];
+            currentMoveIndex = currentPathMoves.length - 1;
+            currentNode = nextNode; 
+            applyPathToBoard();
+            updateMoveNavigationText();
+        } else {
+            updateMoveNavigationText(); 
+        }
+    });
+    mobileNavLastBtn.addEventListener('click', () => {
+        if (!sgfGameRoot) return;
+        let tempPath = [];
+        let tempNode = sgfGameRoot;
+        while(tempNode) {
+            const moveData = tempNode.getMoveData();
+            if (moveData && (tempNode !== sgfGameRoot || (tempNode === sgfGameRoot && (moveData.player ===1 || moveData.player ===2)) )) {
+                 tempPath.push({...moveData, sgfNodeRef: tempNode});
+            }
+            if (tempNode.children.length > 0) {
+                 tempNode = tempNode.getSelectedChild();
+            } else {
+                break;
+            }
+        }
+        
+        if (tempPath.length > 0) {
+            currentPathMoves = tempPath;
+            navigateToMove(tempPath.length - 1);
+        } else { 
+            navigateToMove(-1);
+        }
+    });
 
 
-    window.addEventListener('resize', () => resizeCanvas());
+    window.addEventListener('resize', () => { if (sgfGameRoot) resizeCanvas(); });
     document.addEventListener('keydown', (event) => {
-        if (gameMoves.length === 0 && currentMoveIndex === -1 && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return; // Allow arrows even if no moves for initial nav to -1
+        if (!sgfGameRoot) return; 
+
         if (event.key === 'ArrowLeft') {
-            if (currentMoveIndex > -1) navigateToMove(currentMoveIndex - 1);
-            else if (currentMoveIndex === -1 && gameMoves.length > 0) navigateToMove(-1); // Stay at start
+            if (currentMoveIndex >= 0) { 
+                navigateToMove(currentMoveIndex - 1);
+            }
         } else if (event.key === 'ArrowRight') {
-            if (currentMoveIndex < gameMoves.length - 1) navigateToMove(currentMoveIndex + 1);
-            else if (currentMoveIndex === gameMoves.length - 1 && gameMoves.length > 0) {
-                 updateMoveNavigationText(); // Refresh text to show "Player's turn"
+            if (currentNode && currentNode.getSelectedChild()) {
+                const nextNode = currentNode.getSelectedChild();
+                const moveData = nextNode.getMoveData(); 
+                if (moveData) {
+                    const basePath = (currentMoveIndex === -1) ? [] : currentPathMoves.slice(0, currentMoveIndex + 1);
+                    currentPathMoves = [...basePath, { ...moveData, sgfNodeRef: nextNode }];
+                    currentMoveIndex = currentPathMoves.length - 1;
+                    currentNode = nextNode; 
+                    applyPathToBoard();
+                    updateMoveNavigationText();
+                }
+            } else {
+                 updateMoveNavigationText(); 
             }
         }
     });
 
     themeToggleBtn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
-        updateAssetSources(); // Update all asset sources including logos and icons
+        updateAssetSources(); 
         updateThemeColorsFromCSS();
-        drawBoard();
+        if (sgfGameRoot) drawBoard(); 
         localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode');
     });
 
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark-mode') document.body.classList.add('dark-mode');
     
-    updateAssetSources(); // Initial asset sources
+    updateAssetSources(); 
     updateThemeColorsFromCSS();
-    // checkInitialAuthState(); // Clerk will handle its own auth state
-    initGame(false);
+    initGame(false); 
 });
