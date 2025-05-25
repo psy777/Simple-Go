@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileNavMoveNextBtn = document.getElementById('mobile-nav-next'); 
     const mobileNavLastBtn = document.getElementById('mobile-nav-last');
     const mobileNavMoveNumSpan = document.getElementById('mobile-nav-movenum');
+    const toggleNavBtn = document.getElementById('toggle-nav-btn'); // Assuming a button with this ID exists for toggling nav visibility
 
     const newGameModal = document.getElementById('new-game-modal');
     const startGameBtn = document.getElementById('start-game-btn');
@@ -135,6 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalWhiteNameInput = document.getElementById('modal-white-name');
     const modalWhiteRankInput = document.getElementById('modal-white-rank');
     const modalKomiInput = document.getElementById('modal-komi');
+
+    // Shortcuts Modal Elements
+    const shortcutsModalBtn = document.getElementById('shortcuts-modal-btn');
+    const shortcutsModal = document.getElementById('shortcuts-modal');
 
     const allCloseModalBtns = document.querySelectorAll('.close-modal-btn');
 
@@ -281,12 +286,13 @@ document.addEventListener('DOMContentLoaded', () => {
              moveNavigationInfoDiv.textContent = `Start. ${playerNames.black}'s turn.`;
              mobileNavMoveNumSpan.textContent = '0';
         } else if (currentMoveIndex === totalMovesInCurrentPath - 1) { 
-            const hasContinuations = currentNode && currentNode.children.length > 0;
-            if (hasContinuations) {
-                 moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn. (Variations exist)`;
-            } else {
-                 moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1}. ${playerNames[currentPlayer === 1 ? 'black' : 'white']}'s turn.`;
+            const hasActualVariations = currentNode && currentNode.children.length > 1;
+            const nextPlayerTurn = playerNames[currentPlayer === 1 ? 'black' : 'white'];
+            let text = `Move ${currentMoveIndex + 1}. ${nextPlayerTurn}'s turn.`;
+            if (hasActualVariations) {
+                text += " (Variations exist)";
             }
+            moveNavigationInfoDiv.textContent = text;
             mobileNavMoveNumSpan.textContent = (currentMoveIndex + 1).toString();
         } else { 
             moveNavigationInfoDiv.textContent = `Move ${currentMoveIndex + 1} of ${totalMovesInCurrentPath}.`;
@@ -318,16 +324,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else if (loadedSgfRootProps) { // Loading from SGF, sgfGameRoot is already set by loadGameFromSgf
             gameTitle = loadedSgfRootProps.GN?.[0] || "wrengo";
-            newBoardSize = parseInt(loadedSgfRootProps.SZ?.[0]) || 19; // boardSize global will be updated below
+            newBoardSize = parseInt(loadedSgfRootProps.SZ?.[0]) || 19; 
             playerNames.black = loadedSgfRootProps.PB?.[0] || "Black";
             playerRanks.black = loadedSgfRootProps.BR?.[0] || "??";
             playerNames.white = loadedSgfRootProps.PW?.[0] || "White";
             playerRanks.white = loadedSgfRootProps.WR?.[0] || "??";
             komi = parseFloat(loadedSgfRootProps.KM?.[0]) || 6.5;
             
-            if (sgfGameRoot) { // sgfGameRoot should have been set by loadGameFromSgf
+            if (sgfGameRoot) { 
                 currentNode = sgfGameRoot;
-            } else { // Should not happen if loadGameFromSgf ran correctly
+            } else { 
                 console.error("initGame called for SGF load, but sgfGameRoot is not set! Recreating a basic one.");
                 const fallbackRootProps = { 
                     GM: ["1"], FF: ["4"], CA: ["UTF-8"], AP: ["Wrengo:1.1"], RU: ["Japanese"],
@@ -337,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sgfGameRoot = new SgfNode(loadedSgfRootProps ? { ...fallbackRootProps, ...loadedSgfRootProps } : fallbackRootProps);
                 currentNode = sgfGameRoot;
             }
-        } else { // Default init (e.g. on page load before any action)
+        } else { // Default init
             gameTitle = "wrengo";
             newBoardSize = 19;
             playerNames = { black: "Black", white: "White" };
@@ -355,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         document.title = gameTitle + " SGF";
-        boardSize = newBoardSize; // Update global boardSize
+        boardSize = newBoardSize; 
 
         currentPathMoves = [];
         currentMoveIndex = -1;
@@ -402,6 +408,57 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let r = 0; r < boardSize; r++) {
             for (let c = 0; c < boardSize; c++) { if (board[r][c] !== 0) drawStone(r, c, board[r][c]); }
         }
+
+        // Draw variation markers
+        // Show markers if current node has multiple valid, playable children for the current player.
+        if (currentNode && sgfGameRoot) {
+            const variations = currentNode.children;
+            let playableVariationCount = 0;
+            if (variations.length > 1) { // Only consider drawing if there are multiple children structurally
+                for (let i = 0; i < variations.length; i++) {
+                    const childNode = variations[i];
+                    const moveData = childNode.getMoveData();
+                    if (moveData && moveData.player === currentPlayer && board[moveData.r][moveData.c] === 0) {
+                        playableVariationCount++;
+                    }
+                }
+            }
+
+            if (playableVariationCount > 1) { // Only draw markers if there are actually multiple distinct playable moves
+                let markerCharIndex = 0;
+                for (let i = 0; i < variations.length; i++) {
+                    const childNode = variations[i];
+                    const moveData = childNode.getMoveData();
+                    if (moveData && moveData.player === currentPlayer && board[moveData.r][moveData.c] === 0) { 
+                        const letter = String.fromCharCode('A'.charCodeAt(0) + markerCharIndex++);
+                        drawVariationMarkerStone(moveData.r, moveData.c, moveData.player, letter);
+                    }
+                }
+            }
+        }
+    }
+
+    function drawVariationMarkerStone(row, col, player, text) {
+        const padding = squareSize / 2;
+        const stoneRadius = squareSize * 0.45; 
+        const x = padding + col * squareSize + squareSize / 2;
+        const y = padding + row * squareSize + squareSize / 2;
+
+        ctx.beginPath();
+        ctx.arc(x, y, stoneRadius, 0, 2 * Math.PI);
+        // Use preview colors for the stone to make it appear semi-transparent
+        ctx.fillStyle = player === 1 ? STONE_COLOR.PREVIEW_BLACK : STONE_COLOR.PREVIEW_WHITE;
+        ctx.fill();
+        ctx.strokeStyle = player === 1 ? '#000' : '#ccc'; // Keep outline for white stones
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        ctx.fillStyle = player === 1 ? STONE_COLOR.WHITE : STONE_COLOR.BLACK; 
+        const fontSize = Math.max(10, Math.floor(squareSize * 0.55)); 
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
     }
 
     function getStarPoints(size) { 
@@ -461,6 +518,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     if (startGameBtn) startGameBtn.addEventListener('click', () => { initGame(true); closeModal(newGameModal); });
+    if (shortcutsModalBtn && shortcutsModal) {
+        shortcutsModalBtn.addEventListener('click', () => openModal(shortcutsModal));
+    }
 
     window.addEventListener('click', (event) => {
         if (event.target.classList.contains('modal')) {
@@ -574,9 +634,11 @@ document.addEventListener('DOMContentLoaded', () => {
                          rootNode = new SgfNode({SZ: [boardSize.toString()]}); 
                          lastNodeInSequence = rootNode;
                     }
-                    currentStack.push(lastNodeInSequence); 
+                    currentStack.push(lastNodeInSequence); // lastNodeInSequence here is the parent of the upcoming variation(s)
+                    let parentOfThisVariationGroup = lastNodeInSequence;
                     parseSequence(); 
-                    currentStack.pop();
+                    currentStack.pop(); 
+                    lastNodeInSequence = parentOfThisVariationGroup; // Restore lastNodeInSequence to the node that preceded this variation block
                     skipWhitespaceAndComments();
                     if (sgfString[currentIndex] === ')') {
                         currentIndex++; 
@@ -617,32 +679,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function loadGameFromSgf(parsedNode) {
-        sgfGameRoot = parsedNode; // Set the global tree with children
+        sgfGameRoot = parsedNode; 
         if (!sgfGameRoot) {
             statusMessageP.textContent = "Error: Parsed SGF data is invalid.";
-            initGame(false); // Initialize a default empty game
+            initGame(false); 
             return;
         }
 
         const rootActualProps = sgfGameRoot.properties;
-        // Ensure global boardSize is updated from SGF before initGame uses it
         if (rootActualProps.SZ && rootActualProps.SZ[0]) {
             const sz = parseInt(rootActualProps.SZ[0]);
             if (!isNaN(sz) && sz > 0) boardSize = sz;
         }
         
-        // Call initGame to set up game parameters (title, players, komi) using SGF root's props
-        // Crucially, initGame will now *not* overwrite the sgfGameRoot if called this way.
         initGame(false, rootActualProps); 
 
-        // Build the initial currentPathMoves from the main variation of the loaded SGF
         let path = [];
         let nodeForPath = sgfGameRoot; 
         while(nodeForPath) {
             const moveData = nodeForPath.getMoveData();
-            // Add to path if it's an actual B/W move.
-            // For root node, only add if it's a B/W move itself (e.g. SGF starts ;B[aa])
-            // For child nodes, always add if it's a B/W move.
             if (moveData && (nodeForPath !== sgfGameRoot || (nodeForPath === sgfGameRoot && (moveData.player === 1 || moveData.player === 2)))) {
                  path.push({ ...moveData, sgfNodeRef: nodeForPath });
             }
@@ -660,19 +715,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentMoveIndex !== -1) {
             currentNode = currentPathMoves[currentMoveIndex].sgfNodeRef;
         } else { 
-            currentNode = sgfGameRoot; // Already set by initGame, but good to be explicit
+            currentNode = sgfGameRoot; 
         }
         
-        applyPathToBoard(); // Rebuild board state for the loaded SGF's main line
+        applyPathToBoard(); 
         updateMoveNavigationText();
         statusMessageP.textContent = ''; 
         updateGameInfo();
-        // resizeCanvas is called by initGame, but call again if boardSize changed explicitly here
         if (rootActualProps.SZ && rootActualProps.SZ[0]) resizeCanvas(); 
         drawBoard();
     }
 
-    // Rebuilds the board state (board, currentPlayer, captures, history) based on currentPathMoves up to currentMoveIndex
     function applyPathToBoard() {
         board = Array(boardSize).fill(null).map(() => Array(boardSize).fill(0));
         blackCaptures = 0; whiteCaptures = 0;
@@ -708,17 +761,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (i === 0 && !(sgfGameRoot.properties.PL && sgfGameRoot.properties.PL[0])) { 
-                pathCurrentPlayer = move.player; // If no PL, first move in path dictates starting player for path replay
+                pathCurrentPlayer = move.player; 
             } else if (i > 0 && currentPathMoves[i-1].player === move.player) {
                  console.warn(`SGF Replay: Consecutive moves by same player at move ${i + 1}. Player ${move.player}`);
-            } else if (i > 0 && currentPathMoves[i-1].player !== move.player) {
-                pathCurrentPlayer = move.player; // Current move's player
+            } else if (i > 0 && currentPathMoves[i-1].player !== move.player) { 
+                pathCurrentPlayer = move.player; 
             } else if (i === 0 && sgfGameRoot.properties.PL && sgfGameRoot.properties.PL[0]) {
-                // PL is set, pathCurrentPlayer is already correct from PL.
-                // We still need to ensure move.player matches pathCurrentPlayer for this first move.
                 if (move.player !== pathCurrentPlayer) {
                      console.warn(`SGF Replay: Player mismatch for first move ${i+1} despite PL. Expected ${pathCurrentPlayer}, got ${move.player}. Forcing.`);
-                     // pathCurrentPlayer = move.player; // Or error
                 }
             }
 
@@ -887,9 +937,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = event.clientX - rect.left; const y = event.clientY - rect.top;
         const padding = squareSize / 2;
         const col = Math.floor((x - padding) / squareSize); const row = Math.floor((y - padding) / squareSize);
-        drawBoard();
+        
+        drawBoard(); // Redraw board first to clear old previews/markers
+
         if (row >= 0 && row < boardSize && col >= 0 && col < boardSize && board[row][col] === 0 && sgfGameRoot) { 
-            drawStone(row, col, currentPlayer, true);
+            let isOverVariationMarker = false;
+            // Check if the hover is over an existing variation marker for the current player
+            if (currentNode && currentMoveIndex === currentPathMoves.length - 1) {
+                const variations = currentNode.children;
+                if (variations.length > 1) { // Only check if multiple variations exist
+                    for (let i = 0; i < variations.length; i++) {
+                        const childNode = variations[i];
+                        const moveData = childNode.getMoveData();
+                        if (moveData && moveData.player === currentPlayer && moveData.r === row && moveData.c === col) {
+                            isOverVariationMarker = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!isOverVariationMarker) { // Only draw preview if not hovering over an active variation marker
+                drawStone(row, col, currentPlayer, true);
+            }
         }
     });
     canvas.addEventListener('mouseout', () => { if (sgfGameRoot) drawBoard(); }); 
@@ -902,6 +972,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const col = Math.floor((x - padding) / squareSize); const row = Math.floor((y - padding) / squareSize);
         
         if (row >= 0 && row < boardSize && col >= 0 && col < boardSize) {
+            // Check if clicking on a variation marker
+            if (currentNode && currentMoveIndex === currentPathMoves.length - 1) {
+                const variations = currentNode.children;
+                if (variations.length > 1) { // Check only if multiple variations exist
+                    for (let i = 0; i < variations.length; i++) {
+                        const childNode = variations[i];
+                        const moveData = childNode.getMoveData();
+                        if (moveData && moveData.player === currentPlayer && moveData.r === row && moveData.c === col && board[row][col] === 0) {
+                            // Clicked on variation marker i for an empty spot
+                            currentNode.selectVariation(i); 
+                            
+                            const selectedMoveNode = currentNode.getSelectedChild();
+                            if (selectedMoveNode) {
+                                const basePath = (currentMoveIndex === -1) ? [] : currentPathMoves.slice(0, currentMoveIndex + 1);
+                                const newMoveData = selectedMoveNode.getMoveData(); // Get data from the selected node
+                                if (newMoveData) { // Ensure it's a playable move
+                                    currentPathMoves = [...basePath, { ...newMoveData, sgfNodeRef: selectedMoveNode }];
+                                    currentMoveIndex = currentPathMoves.length - 1;
+                                    currentNode = selectedMoveNode; 
+                                    applyPathToBoard();
+                                    updateMoveNavigationText();
+                                    return; 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // If no variation marker was clicked, or not in a state to select variations, fall through to normal move.
             handleMove(row, col);
         }
     });
@@ -910,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearBoardPopupMessage();
         statusMessageP.textContent = '';
 
-        if (board[row][col] !== 0) {
+        if (board[row][col] !== 0) { 
             showBoardPopup('Point occupied');
             return;
         }
@@ -939,10 +1038,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const boardStateString = tempBoardForCheck.map(r => r.join('')).join('|');
-        // More precise Ko check: if current board state matches the state before opponent's last move.
-        // boardHistory[boardHistory.length - 1] is the state *after* the current player's *previous* move (or initial state).
-        // boardHistory[boardHistory.length - 2] is the state *after* the opponent's *previous* move.
-        // This is the state we'd revert to if Ko.
         if (boardHistory.length >= 2 && boardHistory[boardHistory.length - 2] === boardStateString && capturedStonesThisTurn.length === 1) {
             showBoardPopup('Illegal move: Ko');
             return;
@@ -1031,26 +1126,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!sgfGameRoot) return;
         let firstMoveNode = sgfGameRoot;
         let path = [];
-        // Find the first actual B/W move in the main variation
         let tempNode = sgfGameRoot;
         while(tempNode){
             const moveData = tempNode.getMoveData();
             if(moveData && (tempNode !== sgfGameRoot || (moveData.player ===1 || moveData.player ===2))){
                 path.push({...moveData, sgfNodeRef: tempNode});
-                break; // Found the first move
+                break; 
             }
             if(tempNode.children.length > 0){
                 tempNode = tempNode.getSelectedChild();
             } else {
-                tempNode = null; // No moves
+                tempNode = null; 
             }
         }
 
         if (path.length > 0) {
-            currentPathMoves = path; // Path to the first move
-            navigateToMove(0);       // Navigate to it (index 0)
+            currentPathMoves = path; 
+            navigateToMove(0);       
         } else { 
-            navigateToMove(-1);      // No moves, navigate to root
+            navigateToMove(-1);      
         }
     });
     mobileNavPrevBtn.addEventListener('click', () => {
@@ -1119,6 +1213,49 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                  updateMoveNavigationText(); 
             }
+        } else if (event.shiftKey && event.key.length === 1 && event.key.toUpperCase() >= 'A' && event.key.toUpperCase() <= 'Z') {
+            // Check if variation markers would be visible (same logic as in drawBoard)
+            if (currentNode && sgfGameRoot) {
+                const variations = currentNode.children;
+                let playableVariationsData = []; // To store {node, originalIndex, moveData, markerLetter}
+                let playableVariationCount = 0;
+
+                if (variations.length > 1) {
+                    for (let i = 0; i < variations.length; i++) {
+                        const childNode = variations[i];
+                        const moveData = childNode.getMoveData();
+                        if (moveData && moveData.player === currentPlayer && board[moveData.r][moveData.c] === 0) {
+                            playableVariationsData.push({ node: childNode, originalIndex: i, moveData: moveData });
+                            playableVariationCount++;
+                        }
+                    }
+                }
+
+                if (playableVariationCount > 1) { // If markers would be shown
+                    const targetLetter = event.key.toUpperCase();
+                    const targetMarkerIndex = targetLetter.charCodeAt(0) - 'A'.charCodeAt(0);
+
+                    if (targetMarkerIndex >= 0 && targetMarkerIndex < playableVariationsData.length) {
+                        const chosenVariationMeta = playableVariationsData[targetMarkerIndex];
+                        currentNode.selectVariation(chosenVariationMeta.originalIndex);
+                        
+                        const selectedMoveNode = currentNode.getSelectedChild(); // This is chosenVariationMeta.node
+                        if (selectedMoveNode) {
+                            const basePath = (currentMoveIndex === -1) ? [] : currentPathMoves.slice(0, currentMoveIndex + 1);
+                            const newMoveData = selectedMoveNode.getMoveData(); // Should be same as chosenVariationMeta.moveData
+                            if (newMoveData) {
+                                currentPathMoves = [...basePath, { ...newMoveData, sgfNodeRef: selectedMoveNode }];
+                                currentMoveIndex = currentPathMoves.length - 1;
+                                currentNode = selectedMoveNode;
+                                applyPathToBoard();
+                                updateMoveNavigationText();
+                                event.preventDefault(); 
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -1136,4 +1273,24 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAssetSources(); 
     updateThemeColorsFromCSS();
     initGame(false); 
+
+    if (toggleNavBtn && mobileNavControls) {
+        // Initial state: show nav on small screens, allow toggle to hide.
+        // On larger screens, it might be hidden by CSS by default, toggle shows it.
+        // Consider localStorage for persistence if desired.
+        // For now, simple toggle. Add a class to #mobile-nav-controls like 'hidden-by-toggle'
+        // CSS would be: #mobile-nav-controls.hidden-by-toggle { display: none !important; }
+        // Or directly manipulate style:
+        // mobileNavControls.style.display = 'flex'; // Or 'none' based on initial desired state / screen size
+
+        toggleNavBtn.addEventListener('click', () => {
+            if (mobileNavControls.style.display === 'none' || mobileNavControls.classList.contains('hidden-by-toggle')) {
+                mobileNavControls.style.display = 'flex'; // Or your default display type for flex container
+                mobileNavControls.classList.remove('hidden-by-toggle');
+            } else {
+                mobileNavControls.style.display = 'none';
+                mobileNavControls.classList.add('hidden-by-toggle');
+            }
+        });
+    }
 });
