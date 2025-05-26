@@ -857,6 +857,19 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessageP.textContent = '';
     }
 
+    function getFormattedDateTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        
+        const fullDateTime = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+        const shortDate = `${day}${month}${year.toString().slice(-2)}`; // DDMMYY
+        return { fullDateTime, shortDate };
+    }
 
     gameInfoSaveSgfBtn.addEventListener('click', () => {
         const sgfContent = generateSgfContent();
@@ -864,7 +877,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const blob = new Blob([sgfContent], { type: 'application/x-go-sgf;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `${gameTitle.replace(/[^a-z0-9 _-]/gi, '_') || 'GoGame'}.sgf`;
+            
+            const { fullDateTime, shortDate } = getFormattedDateTime();
+            let baseFilename;
+            const sanitizedGameTitle = gameTitle.trim().replace(/[^a-z0-9 _-]/gi, '_');
+
+            if (!sanitizedGameTitle || sanitizedGameTitle.toLowerCase() === 'wrengo') {
+                baseFilename = `wrengo${shortDate}`;
+            } else {
+                baseFilename = sanitizedGameTitle;
+            }
+            
+            a.download = `${baseFilename}_${fullDateTime}.sgf`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1295,6 +1319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // mobileNavControls.style.display = 'flex'; // Or 'none' based on initial desired state / screen size
 
         toggleNavBtn.addEventListener('click', () => {
+            const mobileNavControls = document.getElementById('mobile-nav-controls'); // Ensure this is defined
             if (mobileNavControls.style.display === 'none' || mobileNavControls.classList.contains('hidden-by-toggle')) {
                 mobileNavControls.style.display = 'flex'; // Or your default display type for flex container
                 mobileNavControls.classList.remove('hidden-by-toggle');
