@@ -123,6 +123,31 @@
 
     <!-- Login and Register Modals are removed, will be handled by Clerk -->
 
+    <!-- Info Button Container - Bottom Right -->
+    <div id="info-button-container">
+        <button id="shortcuts-info-btn" title="Keyboard Shortcuts"><img src="assets/light mode info button.svg" alt="Keyboard Shortcuts"></button>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcuts-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal-btn" data-modal-id="shortcuts-modal">&times;</span>
+            <h2>Keyboard Shortcuts</h2>
+            <ul id="shortcuts-list">
+                <li><strong>N:</strong> New Game</li>
+                <li><strong>O:</strong> Open SGF File</li>
+                <li><strong>S:</strong> Save SGF File</li>
+                <li><strong>T:</strong> Toggle Theme</li>
+                <li><strong>Arrow Left:</strong> Previous Move</li>
+                <li><strong>Arrow Right:</strong> Next Move</li>
+                <li><strong>Home:</strong> First Move</li>
+                <li><strong>End:</strong> Last Move</li>
+                <li><strong>Esc:</strong> Close Modal / Deselect Point</li>
+                <!-- Add more shortcuts as needed -->
+            </ul>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

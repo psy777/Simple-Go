@@ -175,8 +175,13 @@ header h1#main-title { /* This is now part of .desktop-title styling * /
 .controls button img { /* This now targets icons within .header-controls-group buttons */
     height: var(--icon-size);
     width: var(--icon-size);
-    filter: var(--svg-icon-filter, none); /* For theme-based icon color changes if needed */
+    /* filter: none; Ensure icons are displayed as-is - REMOVED */
 }
+
+/* Ensure the theme toggle icon specifically is not filtered - REMOVED */
+/* #theme-toggle-btn img {
+    filter: none !important;
+} */
 
 .controls button:hover { background-color: var(--button-hover-bg); }
 .controls button:focus {
@@ -250,15 +255,36 @@ main {
 }
 
 #game-info-footer #save-sgf-btn {
-    padding: 5px; /* Consistent with other icon buttons */
-    font-size: 1.1em; 
+    padding: 8px; /* Match .controls button padding */
+    border: 1px solid var(--button-border); /* Add themed border */
+    border-radius: 5px; /* Match .controls button radius */
+    background-color: var(--button-bg); /* Add themed background */
+    color: var(--text-color); /* Match .controls button text color */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    width: 38px; /* Match .controls button width */
+    height: 38px; /* Match .controls button height */
+    box-sizing: border-box; /* Match .controls button box-sizing */
     flex-shrink: 0; 
-    width: 36px; height: 36px; /* Match other control buttons */
-    display: flex; align-items: center; justify-content: center;
 }
+
+#game-info-footer #save-sgf-btn:hover {
+    background-color: var(--button-hover-bg); /* Add themed hover */
+}
+
+#game-info-footer #save-sgf-btn:focus {
+    outline: none;
+    border-color: var(--active-player-border); 
+    box-shadow: 0 0 0 0.2rem var(--focus-ring-color); /* Add themed focus */
+}
+
 #game-info-footer #save-sgf-btn img {
     height: var(--icon-size);
     width: var(--icon-size);
+    /* filter: none; already handled by script.js and general icon rules */
 }
 
 
@@ -430,4 +456,87 @@ body:not(.dark-mode) .mobile-logo#mobile-logo-dark { display: none; }
     #mobile-nav-controls {
         display: flex; /* Show mobile nav controls */
     }
+    /* #shortcuts-info-btn {
+        display: none !important; /* Hide shortcuts button on mobile - REMOVED as button moved */
+    /* } */
 }
+
+/* Info Button Container - Bottom Right */
+#info-button-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999; /* Below modals but above most content */
+}
+
+#info-button-container #shortcuts-info-btn {
+    padding: 10px; /* Slightly larger padding for a floating button */
+    border: 1px solid var(--button-border);
+    border-radius: 50%; /* Make it circular */
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px; /* Adjust for circular shape */
+    height: 48px; /* Adjust for circular shape */
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+#info-button-container #shortcuts-info-btn:hover {
+    background-color: var(--button-hover-bg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+#info-button-container #shortcuts-info-btn img {
+    height: var(--icon-size); /* Use existing icon size variable */
+    width: var(--icon-size);
+    /* filter: none; Ensure icons are displayed as-is - REMOVED */
+}
+
+
+/* Keyboard Shortcuts Modal Specific Styles */
+#shortcuts-modal .modal-content {
+    max-width: 500px; /* Slightly wider for more content */
+}
+
+#shortcuts-list {
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 15px;
+}
+
+#shortcuts-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: 0.95em;
+}
+
+#shortcuts-list li:last-child {
+    border-bottom: none;
+}
+
+#shortcuts-list li strong {
+    display: inline-block;
+    width: 100px; /* Adjust as needed for alignment */
+    color: var(--header-text);
+}
+
+/* Responsive adjustments for Mobile - Hide info button container */
+@media (max-width: 768px) {
+    #info-button-container {
+        display: none !important; /* Hide info button container on mobile */
+    }
+}
+
+/* Ensure the new info button in header controls has consistent styling */
+/* It should already inherit from .controls button, but we might need specifics if the icon is different */
+/* This rule is no longer needed as the button is not in .controls */
+/* #shortcuts-info-btn img {
+    height: var(--icon-size); /* Ensure icon size is consistent * /
+    width: var(--icon-size);
+    filter: var(--svg-icon-filter, none);
+} */

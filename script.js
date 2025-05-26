@@ -138,8 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalKomiInput = document.getElementById('modal-komi');
 
     // Shortcuts Modal Elements
-    const shortcutsModalBtn = document.getElementById('shortcuts-modal-btn');
+    const shortcutsInfoBtn = document.getElementById('shortcuts-info-btn'); 
     const shortcutsModal = document.getElementById('shortcuts-modal');
+    const shortcutsInfoBtnImg = shortcutsInfoBtn ? shortcutsInfoBtn.querySelector('img') : null; // Get the img element
 
     const allCloseModalBtns = document.querySelectorAll('.close-modal-btn');
 
@@ -255,10 +256,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDarkMode = document.body.classList.contains('dark-mode');
         document.getElementById('mobile-logo-light').style.display = isDarkMode ? 'none' : 'inline-block';
         document.getElementById('mobile-logo-dark').style.display = isDarkMode ? 'inline-block' : 'none';
+        
+        // Apply consistent icon switching logic
         newGameModalBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode new game symbol.svg' : 'assets/light mode new game symbol.svg';
         loadSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode upload button.svg' : 'assets/light mode upload button.svg';
-        themeToggleBtn.querySelector('img').src = isDarkMode ? 'assets/light mode toggle.svg' : 'assets/dark mode toggle.svg'; 
         gameInfoSaveSgfBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode save button.svg' : 'assets/light mode save button.svg';
+        
+        // Theme toggle button will show the icon of the CURRENT theme
+        themeToggleBtn.querySelector('img').src = isDarkMode ? 'assets/dark mode theme toggle.svg' : 'assets/light mode theme toggle.svg'; 
+        
+        if (shortcutsInfoBtnImg) {
+            shortcutsInfoBtnImg.src = isDarkMode ? 'assets/dark mode info button.svg' : 'assets/light mode info button.svg';
+        }
     }
 
     function showBoardPopup(message) {
@@ -518,8 +527,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     if (startGameBtn) startGameBtn.addEventListener('click', () => { initGame(true); closeModal(newGameModal); });
-    if (shortcutsModalBtn && shortcutsModal) {
-        shortcutsModalBtn.addEventListener('click', () => openModal(shortcutsModal));
+    
+    // Event listener for the new shortcuts info button
+    if (shortcutsInfoBtn && shortcutsModal) {
+        shortcutsInfoBtn.addEventListener('click', () => openModal(shortcutsModal));
     }
 
     window.addEventListener('click', (event) => {
